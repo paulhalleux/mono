@@ -175,6 +175,21 @@ describe("converters/string", () => {
         expect(zodSchema.safeParse("2022-12-31").success).toBe(false);
         expect(zodSchema.safeParse("2024-01-01").success).toBe(false);
       });
+
+      test("should validate 'date' format with exclusive min and max", () => {
+        const jsonSchema: JSONSchema = {
+          type: "string",
+          format: "date",
+          formatExclusiveMinimum: "2023-01-01",
+          formatExclusiveMaximum: "2023-12-31",
+        };
+
+        const zodSchema = StringConverter.convert(jsonSchema);
+
+        expect(zodSchema.safeParse("2023-06-15").success).toBe(true);
+        expect(zodSchema.safeParse("2022-12-31").success).toBe(false);
+        expect(zodSchema.safeParse("2024-01-01").success).toBe(false);
+      });
     });
 
     describe("time", () => {

@@ -3,22 +3,22 @@ import { JSONSchema } from "zod/v4/core/json-schema";
 
 import { getTimeFormatErrorMessage } from "./format";
 
-function dateTimeToMillis(dateTimeStr: string): number {
+function dateToMillis(dateTimeStr: string): number {
   const date = new Date(dateTimeStr);
   if (isNaN(date.getTime())) {
-    throw new Error(`Invalid date-time string: ${dateTimeStr}`);
+    throw new Error(`Invalid date string: ${dateTimeStr}`);
   }
   return date.getTime();
 }
 
 /**
- * Creates a Zod schema for validating date-time strings in ISO 8601 format.
- * Optionally, it can enforce minimum and maximum bounds on the date-time.
+ * Creates a Zod schema for validating date strings in ISO 8601 format.
+ * Optionally, it can enforce minimum and maximum bounds on the date.
  *
- * @param schema - The JSON Schema containing optional bounds for date-time validation.
- * @returns A Zod schema for validating date-time strings with optional bounds.
+ * @param schema - The JSON Schema containing optional bounds for date validation.
+ * @returns A Zod schema for validating date strings with optional bounds.
  */
-export function dateTimeSchemaWithBounds(schema: JSONSchema) {
+export function dateSchemaWithBounds(schema: JSONSchema) {
   const {
     formatMinimum,
     formatMaximum,
@@ -26,7 +26,7 @@ export function dateTimeSchemaWithBounds(schema: JSONSchema) {
     formatExclusiveMaximum,
   } = schema;
 
-  let base = z.iso.datetime();
+  let base = z.iso.date();
 
   const isExclusiveMinimum = !!formatExclusiveMinimum;
   const isExclusiveMaximum = !!formatExclusiveMaximum;
@@ -37,19 +37,19 @@ export function dateTimeSchemaWithBounds(schema: JSONSchema) {
   base = base.refine(
     (val) => {
       try {
-        const valueMs = dateTimeToMillis(val);
-        const minMs = minimum ? dateTimeToMillis(minimum as string) : -Infinity;
-        const maxMs = maximum ? dateTimeToMillis(maximum as string) : Infinity;
+        const valueMs = dateToMillis(val);
+        const minMs = minimum ? dateToMillis(minimum as string) : -Infinity;
+        const maxMs = maximum ? dateToMillis(maximum as string) : Infinity;
         return (
           (isExclusiveMinimum ? valueMs > minMs : valueMs >= minMs) &&
           (isExclusiveMaximum ? valueMs < maxMs : valueMs <= maxMs)
         );
       } catch {
-        return false; // Invalid date-time string
+        return false; // Invalid date string
       }
     },
     {
-      message: getTimeFormatErrorMessage("date-time", schema),
+      message: getTimeFormatErrorMessage("date", schema),
     },
   );
 

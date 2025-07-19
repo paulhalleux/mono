@@ -2,6 +2,7 @@ import { z } from "zod";
 import { JSONSchema } from "zod/v4/core/json-schema";
 
 import { Converter } from "../types";
+import { dateSchemaWithBounds } from "../utils/date";
 import { dateTimeSchemaWithBounds } from "../utils/date-time";
 import { timeSchemaWithBounds } from "../utils/time";
 
@@ -32,23 +33,7 @@ export const STRING_FORMAT_CONVERTERS: Record<
   (schema: JSONSchema) => z.ZodType
 > = {
   email: () => z.email(),
-  date: ({ formatMinimum, formatMaximum }) => {
-    let base = z.coerce.date();
-
-    if (formatMinimum && typeof formatMinimum === "string") {
-      base = base.min(new Date(formatMinimum), {
-        error: `Date must be greater than or equal to ${formatMinimum}`,
-      });
-    }
-
-    if (formatMaximum && typeof formatMaximum === "string") {
-      base = base.max(new Date(formatMaximum), {
-        error: `Date must be less than or equal to ${formatMaximum}`,
-      });
-    }
-
-    return base;
-  },
+  date: dateSchemaWithBounds,
   time: timeSchemaWithBounds,
   "date-time": dateTimeSchemaWithBounds,
   uuid: () => z.uuidv4(),

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { JSONSchema } from "zod/v4/core/json-schema";
 
+import { getTimeFormatErrorMessage } from "./format";
+
 function timeToMillis(timeStr: string): number {
   const [hh, mm, ss = "0"] = timeStr.split(":");
   return (
@@ -8,15 +10,6 @@ function timeToMillis(timeStr: string): number {
     parseInt(mm, 10) * 60000 +
     parseInt(ss, 10) * 1000
   );
-}
-
-function getErrorMessage({
-  formatMinimum,
-  formatMaximum,
-  formatExclusiveMinimum,
-  formatExclusiveMaximum,
-}: JSONSchema): string {
-  return "Invalid time format";
 }
 
 /**
@@ -53,7 +46,7 @@ export function timeSchemaWithBounds(schema: JSONSchema) {
       );
     },
     {
-      message: getErrorMessage(schema),
+      message: getTimeFormatErrorMessage("time", schema),
     },
   );
 
