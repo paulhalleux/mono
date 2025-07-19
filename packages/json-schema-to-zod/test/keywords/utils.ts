@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { JSONSchema } from "zod/v4/core/json-schema";
 
-import { convertSchemaToZod } from "../../src/converters/schema";
+import { convert } from "../../src";
 
 export const runSuite = async (
   suites: Array<{
@@ -16,7 +16,7 @@ export const runSuite = async (
 ) => {
   for (const suite of suites) {
     describe(suite.description, () => {
-      const zodSchema = convertSchemaToZod(suite.schema as JSONSchema);
+      const zodSchema = convert(suite.schema as JSONSchema);
 
       for (const testItem of suite.tests) {
         test(testItem.description, () => {

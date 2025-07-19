@@ -1,104 +1,70 @@
 import { z } from "zod";
-import { JSONSchema } from "zod/v4/core/json-schema";
 
-import { Converter } from "../types";
-import { dateSchemaWithBounds } from "../utils/date";
-import { dateTimeSchemaWithBounds } from "../utils/date-time";
-import { timeSchemaWithBounds } from "../utils/time";
+import { PrimitiveHandler } from "../types";
 
-export const STRING_TYPE = "string";
-export const STRING_PROPERTIES = [
-  "minLength",
-  "maxLength",
-  "pattern",
-  "format",
-] as const;
-
-export const STRING_SUPPORTED_FORMATS = [
-  "email",
-  "date",
-  "time",
-  "date-time",
-  "uuid",
-] as const;
-
-export const STRING_FORMAT_ALLOWING_INTERSECTION: {
-  [K in (typeof STRING_SUPPORTED_FORMATS)[number]]?: true;
-} = {
-  email: true,
-} as const;
-
-export const STRING_FORMAT_CONVERTERS: Record<
-  (typeof STRING_SUPPORTED_FORMATS)[number],
-  (schema: JSONSchema) => z.ZodType
-> = {
-  email: () => z.email(),
-  date: dateSchemaWithBounds,
-  time: timeSchemaWithBounds,
-  "date-time": dateTimeSchemaWithBounds,
-  uuid: () => z.uuidv4(),
+export const ImplicitStringHandler: PrimitiveHandler = {
+  apply(schema, context): void {
+    if (
+      schema.type === undefined &&
+      (schema.minLength !== undefined ||
+        schema.maxLength !== undefined ||
+        schema.pattern !== undefined)
+    ) {
+      if (context.types.string === undefined) {
+        context.types.string = z.string();
+      }
+    }
+  },
 };
 
-/**
- * Checks if the provided format is a supported string format.
- * @param format - The format to check.
- * @returns True if the format is supported, otherwise false.
- */
-export function isSupportedStringFormat(
-  format: string,
-): format is (typeof STRING_SUPPORTED_FORMATS)[number] {
-  return STRING_SUPPORTED_FORMATS.includes(
-    format as (typeof STRING_SUPPORTED_FORMATS)[number],
-  );
-}
-
-export const StringConverter: Converter = {
-  /**
-   * Converts a JSON schema of type "string" to a Zod schema.
-   * @param schema - The JSON schema to convert.
-   * @returns The Zod schema for the string type.
-   */
-  convert: (schema) => {
-    const { minLength, maxLength, pattern, format } = schema;
-
-    let zodSchema: z.ZodType;
-    let zodSchemaString = z.string();
-
-    if (minLength !== undefined) {
-      zodSchemaString = zodSchemaString.min(minLength);
-    }
-
-    if (maxLength !== undefined) {
-      zodSchemaString = zodSchemaString.max(maxLength);
-    }
-
-    if (pattern !== undefined) {
-      zodSchemaString = zodSchemaString.regex(new RegExp(pattern));
-    }
-
-    if (format && isSupportedStringFormat(format)) {
-      if (STRING_FORMAT_ALLOWING_INTERSECTION[format]) {
-        zodSchema = zodSchemaString.and(
-          STRING_FORMAT_CONVERTERS[format](schema),
+export const MinLengthHandler: PrimitiveHandler = {
+  apply(schema, context): void {
+    if (schema.minLength === undefined) return;
+    if (context.types.string !== false) {
+      const currentString = context.types.string || z.string();
+      if (currentString instanceof z.ZodString) {
+        context.types.string = currentString.refine(
+          (value: string) => {
+            const graphemeLength = Array.from(value).length;
+            return graphemeLength >= schema.minLength!;
+          },
+          {
+            message: `String must be at least ${schema.minLength} characters long`,
+          },
         );
-      } else zodSchema = STRING_FORMAT_CONVERTERS[format](schema);
-    } else {
-      zodSchema = zodSchemaString;
+      }
     }
-
-    return zodSchema;
   },
+};
 
-  /**
-   * Checks if the provided JSON schema is of type "string".
-   *
-   * If "string" is not strictly defined in the schema,
-   * it will try to infer it based on the presence of properties typical for string schemas, such as `minLength`, `maxLength`, `pattern`, or `format`.
-   *
-   * @param schema - The JSON schema to check.
-   * @returns True if the schema is a string schema, otherwise false.
-   */
-  is: (schema) => {
-    return schema.type === STRING_TYPE;
+export const MaxLengthHandler: PrimitiveHandler = {
+  apply(schema, context): void {
+    if (schema.maxLength === undefined) return;
+    if (context.types.string !== false) {
+      const currentString = context.types.string || z.string();
+      if (currentString instanceof z.ZodString) {
+        context.types.string = currentString.refine(
+          (value: string) => {
+            const graphemeLength = Array.from(value).length;
+            return graphemeLength <= schema.maxLength!;
+          },
+          {
+            message: `String must be at most ${schema.maxLength} characters long`,
+          },
+        );
+      }
+    }
+  },
+};
+
+export const PatternHandler: PrimitiveHandler = {
+  apply(schema, context): void {
+    if (schema.pattern === undefined) return;
+    if (context.types.string !== false) {
+      const currentString = context.types.string || z.string();
+      if (currentString instanceof z.ZodString) {
+        context.types.string = currentString.regex(new RegExp(schema.pattern));
+      }
+    }
   },
 };
