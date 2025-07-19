@@ -1,0 +1,11 @@
+{
+  "name": "@paulhalleux/ts-config",
+  "version": "1.0.2",
+  "description": "Some TypeScript configurations for my projects",
+  "author": "HALLEUX, Paul",
+  "repository": {
+    "url": "git+https://github.com/paulhalleux/phal-configs.git",
+    "directory": "packages/ts-config",
+    "type": "git"
+  }
+}

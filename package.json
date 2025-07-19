@@ -1,0 +1,15 @@
+{
+  "name": "root",
+  "private": true,
+  "repository": {
+    "url": "git+https://github.com/paulhalleux/phal-configs.git",
+    "type": "git"
+  },
+  "workspaces": [
+    "configs/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "lerna": "^6.6.2"
+  }
+}

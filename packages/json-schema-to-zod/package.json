@@ -1,0 +1,28 @@
+{
+  "name": "@paulhalleux/json-schema-to-zod",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "scripts": {
+    "build": "bun run build.ts",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@paulhalleux/eslint-config": "^1.0.2",
+    "@types/bun": "^1.1.10",
+    "bun-plugin-dts": "^0.3.0"
+  }
+}
