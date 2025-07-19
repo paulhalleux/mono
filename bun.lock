@@ -48,7 +48,7 @@
       "name": "@paulhalleux/json-schema-to-zod",
       "version": "0.0.0",
       "dependencies": {
-        "zod": "4",
+        "zod": "^4.0.5",
       },
       "devDependencies": {
         "@paulhalleux/eslint-config": "^1.0.2",

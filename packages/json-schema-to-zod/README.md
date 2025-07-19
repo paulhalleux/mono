@@ -1,26 +1,17 @@
-# bun starter
+# json-schema-to-zod
 
-## Getting Started
+A tool to convert JSON Schema to Zod schemas.
 
-Click the [Use this template](https://github.com/wobsoriano/bun-lib-starter/generate) button to create a new repository with the contents starter.
+## Supported Features
 
-OR
-
-Run `bun create wobsoriano/bun-lib-starter ./my-lib`.
-
-## Setup
-
-```bash
-# install dependencies
-bun install
-
-# test the app
-bun test
-
-# build the app, available under dist
-bun run build
-```
-
-## License
-
-MIT
+- 🚧 `string`: Converting a string JSON Schema type to a Zod string schema.
+  - ✅ `minLength`: Minimum length of the string.
+  - ✅ `maxLength`: Maximum length of the string.
+  - ✅ `pattern`: Regular expression pattern that the string must match.
+  - ✅ `format`: Validation based on common formats like `email`, `uri`, etc.
+    - ✅ `email`: Validates that the string is a valid email address.
+    - ✅ `date`: Validates that the string is a valid date format.
+    - ✅ `time`: Validates that the string is a valid time format.
+    - ✅ `date-time`: Validates that the string is a valid date-time format.
+    - ⛔`uuid`: Validates that the string is a valid UUID.
+  - ⛔ `enum`: Validates that the string is one of the specified values in the enum.
