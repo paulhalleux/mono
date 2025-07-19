@@ -24,3 +24,12 @@ A tool to convert JSON Schema to Zod schemas.
   - ✅ `enum`: Validates that the boolean is one of the specified values in the enum.
 - ✅ `null`
 - ✅ `const`
+- ✅ `array`: Converting a JSON Schema array type to a Zod array schema.
+  - ✅ `items`: Validates the items in the array.
+  - ✅ `minItems`: Minimum number of items in the array.
+  - ✅ `maxItems`: Maximum number of items in the array.
+  - ✅ `uniqueItems`: Validates that all items in the array are unique.
+  - ✅ `enum`: Validates that the array is one of the specified values in the enum.
+  - ✅ `contains`: Validates that the array contains at least one item that matches the specified schema.
+  - ✅ `minContains`: Minimum number of items that must match the specified schema.
+  - ✅ `maxContains`: Maximum number of items that must match the specified schema.
