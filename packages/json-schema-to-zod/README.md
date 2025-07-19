@@ -13,5 +13,5 @@ A tool to convert JSON Schema to Zod schemas.
     - ✅ `date`: Validates that the string is a valid date format.
     - ✅ `time`: Validates that the string is a valid time format.
     - ✅ `date-time`: Validates that the string is a valid date-time format.
-    - ⛔`uuid`: Validates that the string is a valid UUID.
+    - ✅`uuid`: Validates that the string is a valid UUID.
   - ⛔ `enum`: Validates that the string is one of the specified values in the enum.

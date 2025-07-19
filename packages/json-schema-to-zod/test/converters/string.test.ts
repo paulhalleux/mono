@@ -336,5 +336,44 @@ describe("converters/string", () => {
         expect(zodSchema.safeParse("2024-01-01T00:00:00Z").success).toBe(false);
       });
     });
+
+    describe("uuid", () => {
+      test("should validate 'uuid' format", () => {
+        const jsonSchema: JSONSchema = {
+          type: "string",
+          format: "uuid",
+        };
+
+        const zodSchema = StringConverter.convert(jsonSchema);
+
+        expect(
+          zodSchema.safeParse("16e422e6-07aa-483e-953c-38350e364f70").success,
+        ).toBe(true);
+      });
+
+      test('should not validate "uuid" format with wrong version (v7)', () => {
+        const jsonSchema: JSONSchema = {
+          type: "string",
+          format: "uuid",
+        };
+
+        const zodSchema = StringConverter.convert(jsonSchema);
+
+        expect(
+          zodSchema.safeParse("01982332-2c6c-713c-b31b-739bb364453f").success,
+        ).toBe(false);
+      });
+
+      test("should not validate invalid 'uuid' format", () => {
+        const jsonSchema: JSONSchema = {
+          type: "string",
+          format: "uuid",
+        };
+
+        const zodSchema = StringConverter.convert(jsonSchema);
+
+        expect(zodSchema.safeParse("invalid-uuid").success).toBe(false);
+      });
+    });
   });
 });

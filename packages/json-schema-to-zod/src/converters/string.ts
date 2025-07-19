@@ -18,6 +18,7 @@ export const STRING_SUPPORTED_FORMATS = [
   "date",
   "time",
   "date-time",
+  "uuid",
 ] as const;
 
 export const STRING_FORMAT_ALLOWING_INTERSECTION: {
@@ -50,6 +51,7 @@ export const STRING_FORMAT_CONVERTERS: Record<
   },
   time: timeSchemaWithBounds,
   "date-time": dateTimeSchemaWithBounds,
+  uuid: () => z.uuidv4(),
 };
 
 /**
