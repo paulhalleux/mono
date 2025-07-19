@@ -2,10 +2,16 @@ import { z } from "zod";
 import { JSONSchema } from "zod/v4/core/json-schema";
 
 import { BooleanConverter } from "./boolean";
+import { NullConverter } from "./null";
 import { NumericConverter } from "./numeric";
 import { StringConverter } from "./string";
 
-export const CONVERTERS = [StringConverter, NumericConverter, BooleanConverter];
+export const CONVERTERS = [
+  StringConverter,
+  NumericConverter,
+  BooleanConverter,
+  NullConverter,
+];
 
 /**
  * Converts a JSON schema to a Zod schema.
