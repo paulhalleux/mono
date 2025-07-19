@@ -59,28 +59,39 @@ export const StringConverter: Converter = {
    * @returns The Zod schema for the string type.
    */
   convert: (schema) => {
-    const { minLength, maxLength, pattern, format } = schema;
-    let zodSchema = z.string();
+    const { minLength, maxLength, pattern, format, enum: _enum } = schema;
+
+    let zodSchema: z.ZodType;
+    let zodSchemaString = z.string();
 
     if (minLength !== undefined) {
-      zodSchema = zodSchema.min(minLength);
+      zodSchemaString = zodSchemaString.min(minLength);
     }
 
     if (maxLength !== undefined) {
-      zodSchema = zodSchema.max(maxLength);
+      zodSchemaString = zodSchemaString.max(maxLength);
     }
 
     if (pattern !== undefined) {
-      zodSchema = zodSchema.regex(new RegExp(pattern));
+      zodSchemaString = zodSchemaString.regex(new RegExp(pattern));
     }
 
     if (format && isSupportedStringFormat(format)) {
-      if (STRING_FORMAT_ALLOWING_INTERSECTION[format])
-        return z.intersection(
-          zodSchema,
+      if (STRING_FORMAT_ALLOWING_INTERSECTION[format]) {
+        zodSchema = zodSchemaString.and(
           STRING_FORMAT_CONVERTERS[format](schema),
         );
-      return STRING_FORMAT_CONVERTERS[format](schema);
+      } else zodSchema = STRING_FORMAT_CONVERTERS[format](schema);
+    } else {
+      zodSchema = zodSchemaString;
+    }
+
+    if (_enum !== undefined && Array.isArray(_enum)) {
+      const validEnumValues = _enum.filter(
+        (e) => e !== null && e !== undefined && typeof e === "string",
+      );
+
+      zodSchema = z.enum(validEnumValues).and(zodSchema);
     }
 
     return zodSchema;

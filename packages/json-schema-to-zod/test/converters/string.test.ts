@@ -391,4 +391,59 @@ describe("converters/string", () => {
       });
     });
   });
+
+  describe("enum", () => {
+    test("should validate enum values", () => {
+      const jsonSchema: JSONSchema = {
+        type: "string",
+        enum: ["apple", "banana", "cherry"],
+      };
+
+      const zodSchema = StringConverter.convert(jsonSchema);
+
+      expect(zodSchema.safeParse("apple").success).toBe(true);
+      expect(zodSchema.safeParse("banana").success).toBe(true);
+      expect(zodSchema.safeParse("cherry").success).toBe(true);
+      expect(zodSchema.safeParse("orange").success).toBe(false);
+    });
+
+    test("should not validate non-enum values", () => {
+      const jsonSchema: JSONSchema = {
+        type: "string",
+        enum: ["red", "green", "blue"],
+      };
+
+      const zodSchema = StringConverter.convert(jsonSchema);
+
+      expect(zodSchema.safeParse("yellow").success).toBe(false);
+    });
+
+    test("should validate enum with mixed case", () => {
+      const jsonSchema: JSONSchema = {
+        type: "string",
+        enum: ["One", "Two", "Three"],
+      };
+
+      const zodSchema = StringConverter.convert(jsonSchema);
+
+      expect(zodSchema.safeParse("One").success).toBe(true);
+      expect(zodSchema.safeParse("two").success).toBe(false);
+      expect(zodSchema.safeParse("Three").success).toBe(true);
+    });
+
+    test("should validate enum with other properties", () => {
+      const jsonSchema: JSONSchema = {
+        type: "string",
+        enum: ["red", "green", "blue"],
+        minLength: 4,
+      };
+
+      const zodSchema = StringConverter.convert(jsonSchema);
+
+      expect(zodSchema.safeParse("red").success).toBe(false);
+      expect(zodSchema.safeParse("green").success).toBe(true);
+      expect(zodSchema.safeParse("blue").success).toBe(true);
+      expect(zodSchema.safeParse("yellow").success).toBe(false);
+    });
+  });
 });
