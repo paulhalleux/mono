@@ -25,11 +25,10 @@ export const NumericConverter: Converter = {
       exclusiveMinimum,
       exclusiveMaximum,
       multipleOf,
-      enum: _enum,
     } = schema;
 
     let zodSchema: z.ZodType;
-    let zodNumberSchema = type === "integer" ? z.number().int() : z.number();
+    let zodNumberSchema = type === "integer" ? z.int() : z.number();
 
     if (minimum !== undefined) {
       zodNumberSchema = zodNumberSchema.min(
@@ -49,16 +48,6 @@ export const NumericConverter: Converter = {
 
     zodSchema = zodNumberSchema;
 
-    if (_enum !== undefined && Array.isArray(_enum)) {
-      const validEnumValues = _enum.filter(
-        (e) => e !== null && e !== undefined && typeof e === "number",
-      );
-
-      zodSchema = z
-        .union(validEnumValues.map((value) => z.literal(value)))
-        .and(zodSchema);
-    }
-
     return zodSchema;
   },
 
@@ -70,9 +59,7 @@ export const NumericConverter: Converter = {
   is: (schema) => {
     return (
       (schema.type && NUMERIC_TYPES.includes(schema.type)) ||
-      NUMERIC_PROPERTIES.some((prop) => prop in schema) ||
-      (schema.enum !== undefined &&
-        schema.enum.some((value) => typeof value === "number"))
+      NUMERIC_PROPERTIES.some((prop) => prop in schema)
     );
   },
 };

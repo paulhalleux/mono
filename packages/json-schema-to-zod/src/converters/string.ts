@@ -59,7 +59,7 @@ export const StringConverter: Converter = {
    * @returns The Zod schema for the string type.
    */
   convert: (schema) => {
-    const { minLength, maxLength, pattern, format, enum: _enum } = schema;
+    const { minLength, maxLength, pattern, format } = schema;
 
     let zodSchema: z.ZodType;
     let zodSchemaString = z.string();
@@ -86,14 +86,6 @@ export const StringConverter: Converter = {
       zodSchema = zodSchemaString;
     }
 
-    if (_enum !== undefined && Array.isArray(_enum)) {
-      const validEnumValues = _enum.filter(
-        (e) => e !== null && e !== undefined && typeof e === "string",
-      );
-
-      zodSchema = z.enum(validEnumValues).and(zodSchema);
-    }
-
     return zodSchema;
   },
 
@@ -107,11 +99,6 @@ export const StringConverter: Converter = {
    * @returns True if the schema is a string schema, otherwise false.
    */
   is: (schema) => {
-    return (
-      schema.type === STRING_TYPE ||
-      STRING_PROPERTIES.some((prop) => prop in schema) ||
-      (schema.enum !== undefined &&
-        schema.enum.some((e) => typeof e === "string"))
-    );
+    return schema.type === STRING_TYPE;
   },
 };

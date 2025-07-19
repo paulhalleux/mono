@@ -1,0 +1,14 @@
+File: minLength.test.ts
+✅ Passed: 5
+❌ Failed: 2
+---
+
+File: type.test.ts
+✅ Passed: 80
+❌ Failed: 0
+---
+
+File: utils.ts
+✅ Passed: 0
+❌ Failed: 0
+---

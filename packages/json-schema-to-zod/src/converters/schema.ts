@@ -4,6 +4,7 @@ import { JSONSchema } from "zod/v4/core/json-schema";
 import { ArrayConverter } from "./array";
 import { BooleanConverter } from "./boolean";
 import { ConstConverter } from "./const";
+import { MultipleTypesConverter } from "./multiple-types";
 import { NullConverter } from "./null";
 import { NumericConverter } from "./numeric";
 import { ObjectConverter } from "./object";
@@ -22,6 +23,7 @@ export function convertSchemaToZod(schema: JSONSchema | boolean): z.ZodType {
   // Order matters, as the first matching converter will be used.
   // Order from most specific to least specific. And from least costly to most costly.
   const CONVERTERS = [
+    MultipleTypesConverter,
     ConstConverter,
     NullConverter,
     ObjectConverter,
