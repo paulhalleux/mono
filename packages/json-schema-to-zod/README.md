@@ -22,3 +22,5 @@ A tool to convert JSON Schema to Zod schemas.
   - ✅ `enum`: Validates that the number is one of the specified values in the enum.
 - ✅ `boolean`: Converting a boolean JSON Schema type to a Zod boolean schema.
   - ✅ `enum`: Validates that the boolean is one of the specified values in the enum.
+- ✅ `null`
+- ✅ `const`
