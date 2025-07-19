@@ -31,6 +31,20 @@ describe("converters/string", () => {
 
       expect(StringConverter.is(jsonSchema)).toBe(false);
     });
+
+    test("should return false for empty schema", () => {
+      const jsonSchema: JSONSchema = {};
+
+      expect(StringConverter.is(jsonSchema)).toBe(false);
+    });
+
+    test("should return true for schema with enum of strings", () => {
+      const jsonSchema: JSONSchema = {
+        enum: ["apple", "banana", "cherry"],
+      };
+
+      expect(StringConverter.is(jsonSchema)).toBe(true);
+    });
   });
 
   describe("validation", () => {

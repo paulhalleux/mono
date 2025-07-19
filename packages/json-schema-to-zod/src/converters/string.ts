@@ -109,7 +109,9 @@ export const StringConverter: Converter = {
   is: (schema) => {
     return (
       schema.type === STRING_TYPE ||
-      STRING_PROPERTIES.some((prop) => prop in schema)
+      STRING_PROPERTIES.some((prop) => prop in schema) ||
+      (schema.enum !== undefined &&
+        schema.enum.some((e) => typeof e === "string"))
     );
   },
 };
