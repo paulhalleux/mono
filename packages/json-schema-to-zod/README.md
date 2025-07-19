@@ -33,3 +33,15 @@ A tool to convert JSON Schema to Zod schemas.
   - ✅ `contains`: Validates that the array contains at least one item that matches the specified schema.
   - ✅ `minContains`: Minimum number of items that must match the specified schema.
   - ✅ `maxContains`: Maximum number of items that must match the specified schema.
+  - ⛔ `prefixItems`: Validates the items in the array with a specific schema for each index.
+  - ⛔ `additionalItems`: Validates additional items in the array beyond the specified items.
+- ✅ `object`: Converting a JSON Schema object type to a Zod object schema.
+  - ✅ `properties`: Validates the properties of the object.
+  - ✅ `required`: Specifies which properties are required in the object.
+  - ✅ `additionalProperties`: Validates additional properties in the object beyond the specified properties.
+  - ✅ `minProperties`: Minimum number of properties in the object.
+  - ✅ `maxProperties`: Maximum number of properties in the object.
+  - ✅ `patternProperties`: Validates properties that match a specific pattern.
+  - ✅ `propertyNames`: Validates the names of the properties in the object.
+  - ✅ `dependentRequired`: Validates that if a property is present, other properties must also be present.
+  - ✅ `dependentSchemas`: Validates that if a property is present, the schema of the object must match the specified schema.

@@ -6,6 +6,7 @@ import { BooleanConverter } from "./boolean";
 import { ConstConverter } from "./const";
 import { NullConverter } from "./null";
 import { NumericConverter } from "./numeric";
+import { ObjectConverter } from "./object";
 import { StringConverter } from "./string";
 
 /**
@@ -13,12 +14,17 @@ import { StringConverter } from "./string";
  * @param schema - The JSON schema to convert.
  * @return The Zod schema.
  */
-export function convertSchemaToZod(schema: JSONSchema): z.ZodType {
+export function convertSchemaToZod(schema: JSONSchema | boolean): z.ZodType {
+  if (typeof schema !== "object") {
+    return z.unknown();
+  }
+
   // Order matters, as the first matching converter will be used.
   // Order from most specific to least specific. And from least costly to most costly.
   const CONVERTERS = [
     ConstConverter,
     NullConverter,
+    ObjectConverter,
     ArrayConverter,
     BooleanConverter,
     NumericConverter,
