@@ -1,4 +1,7 @@
-import { Store, StoreBuilder, StoreUpdater } from "@paulhalleux/store-utils";
+import type { EventEmitter } from "events";
+import StrictEventEmitter from "strict-event-emitter-types";
+
+import type { Store, StoreBuilder, StoreUpdater } from "../types/store.ts";
 
 import type { Core } from "./features/core.ts";
 
@@ -25,12 +28,21 @@ export interface TimelineOptions
 export interface TimelineState extends Core.State {}
 
 /**
+ * Timeline events.
+ * This interface defines the events that the Timeline module can emit.
+ */
+export interface TimelineEvents extends Core.Events {}
+
+/**
  * Internal Timeline API.
  * This type defines the internal API required for the Timeline module to function.
  */
 export type InternalTimelineApi = {
   store: Store<TimelineState>;
   setState: StoreUpdater<TimelineState>;
+  abortSignal: AbortSignal;
+  eventEmitter: StrictEventEmitter<EventEmitter, TimelineEvents>;
+  destroy: () => void;
 };
 
 /**
@@ -45,5 +57,5 @@ export interface TimelineApi extends InternalTimelineApi, Core.Api {}
  */
 export type TimelineFeature<Api, Options = never, State = never> = {
   createTimeline(api: InternalTimelineApi, options: Options): Api;
-  initialState: State;
+  getInitialState(options: Options): State;
 };

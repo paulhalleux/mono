@@ -1,9 +1,7 @@
 import { produce } from "immer";
-import { create } from "zustand";
+import { create } from "zustand/react";
 
-import { Store, StoreUpdater } from "./types";
-
-export * from "./types";
+import { Store, StoreUpdater } from "../types/store";
 
 /**
  * Create a new store

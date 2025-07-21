@@ -58,30 +58,19 @@
         "bun-plugin-dts": "^0.3.0",
       },
     },
-    "packages/store-utils": {
-      "name": "@paulhalleux/store-utils",
-      "version": "0.0.0",
-      "dependencies": {
-        "immer": "^10.1.1",
-        "zustand": "^5.0.6",
-      },
-      "devDependencies": {
-        "@paulhalleux/eslint-config": "^1.0.2",
-        "@types/bun": "^1.1.10",
-        "bun-plugin-dts": "^0.3.0",
-      },
-    },
     "packages/timeline": {
       "name": "@paulhalleux/timeline",
       "version": "0.0.0",
       "dependencies": {
+        "events": "^3.3.0",
         "immer": "^10.1.1",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
+        "strict-event-emitter-types": "^2.0.0",
+        "zustand": "^5.0.6",
       },
       "devDependencies": {
         "@paulhalleux/eslint-config": "^1.0.2",
-        "@paulhalleux/store-utils": "^0.0.0",
         "@paulhalleux/ts-config": "^1.0.2",
         "@types/react": "^19.0.10",
         "@types/react-dom": "^19.0.4",
@@ -332,8 +321,6 @@
     "@paulhalleux/eslint-config": ["@paulhalleux/eslint-config@workspace:configs/eslint-config"],
 
     "@paulhalleux/json-schema-to-zod": ["@paulhalleux/json-schema-to-zod@workspace:packages/json-schema-to-zod"],
-
-    "@paulhalleux/store-utils": ["@paulhalleux/store-utils@workspace:packages/store-utils"],
 
     "@paulhalleux/timeline": ["@paulhalleux/timeline@workspace:packages/timeline"],
 
@@ -812,6 +799,8 @@
     "esutils": ["esutils@2.0.3", "", {}, "sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g=="],
 
     "eventemitter3": ["eventemitter3@4.0.7", "", {}, "sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw=="],
+
+    "events": ["events@3.3.0", "", {}, "sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q=="],
 
     "execa": ["execa@5.0.0", "", { "dependencies": { "cross-spawn": "^7.0.3", "get-stream": "^6.0.0", "human-signals": "^2.1.0", "is-stream": "^2.0.0", "merge-stream": "^2.0.0", "npm-run-path": "^4.0.1", "onetime": "^5.1.2", "signal-exit": "^3.0.3", "strip-final-newline": "^2.0.0" } }, "sha512-ov6w/2LCiuyO4RLYGdpFGjkcs0wMTgGE8PrkTHikeUy5iJekXyPIKUjifk5CsE0pt7sMCrMZ3YNqoCj6idQOnQ=="],
 
@@ -1442,6 +1431,8 @@
     "sprintf-js": ["sprintf-js@1.0.3", "", {}, "sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g=="],
 
     "ssri": ["ssri@9.0.1", "", { "dependencies": { "minipass": "^3.1.1" } }, "sha512-o57Wcn66jMQvfHG1FlYbWeZWW/dHZhJXjpIcTfXldXEk5nz5lStPo3mK0OJQfGR3RbZUlbISexbljkJzuEj/8Q=="],
+
+    "strict-event-emitter-types": ["strict-event-emitter-types@2.0.0", "", {}, "sha512-Nk/brWYpD85WlOgzw5h173aci0Teyv8YdIAEtV+N88nDB0dLlazZyJMIsN6eo1/AR61l+p6CJTG1JIyFaoNEEA=="],
 
     "string-argv": ["string-argv@0.3.2", "", {}, "sha512-aqD2Q0144Z+/RqG52NeHEkZauTAUWJO8c6yTftGJKO3Tja5tUgIfmIl6kExvhtxSDP7fXB6DvzkfMpCd/F3G+Q=="],
 
