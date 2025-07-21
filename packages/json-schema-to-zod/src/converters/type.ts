@@ -12,29 +12,29 @@ export const TypeHandler: PrimitiveHandler = {
     const typeSet = new Set(allowedTypes);
 
     if (!typeSet.has("string")) {
-      context.types.string = false;
+      context.disableType("string");
     }
     if (!typeSet.has("number") && !typeSet.has("integer")) {
-      context.types.number = false;
+      context.disableType("numeric");
     }
     if (!typeSet.has("boolean")) {
-      context.types.boolean = false;
+      context.disableType("boolean");
     }
     if (!typeSet.has("null")) {
-      context.types.null = false;
+      context.disableType("null");
     }
     if (!typeSet.has("array")) {
-      context.types.array = false;
+      context.disableType("array");
     }
     if (!typeSet.has("object")) {
-      context.types.object = false;
+      context.disableType("object");
     }
 
     // For integer type, ensure number schema with int constraint
-    if (typeSet.has("integer") && context.types.number !== false) {
-      const currentNumber = context.types.number || z.number();
+    if (typeSet.has("integer") && !context.isTypeDisabled("numeric")) {
+      const currentNumber = context.types.numeric || z.number();
       if (currentNumber instanceof z.ZodNumber) {
-        context.types.number = currentNumber.int();
+        context.types.numeric = currentNumber.int();
       }
     }
   },

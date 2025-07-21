@@ -1,0 +1,3 @@
+[submodule "packages/json-schema-to-zod/test-suite"]
+	path = packages/json-schema-to-zod/test-suite
+	url = https://github.com/json-schema-org/JSON-Schema-Test-Suite.git

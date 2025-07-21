@@ -18,11 +18,13 @@
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "zod": "^4.0.5"
   },
   "devDependencies": {
     "@paulhalleux/eslint-config": "^1.0.2",
     "@types/bun": "^1.1.10",
+    "@types/lodash": "^4.17.20",
     "bun-plugin-dts": "^0.3.0"
   }
 }
