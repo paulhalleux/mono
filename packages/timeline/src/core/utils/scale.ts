@@ -1,0 +1,21 @@
+export function timeToWidth(
+  time: number,
+  viewportWidth: number,
+  viewportDuration: number,
+) {
+  if (viewportDuration === 0) {
+    return 0;
+  }
+  return (time / viewportDuration) * viewportWidth;
+}
+
+export function widthToTime(
+  width: number,
+  viewportWidth: number,
+  viewportDuration: number,
+) {
+  if (viewportWidth === 0) {
+    return 0;
+  }
+  return (width / viewportWidth) * viewportDuration;
+}

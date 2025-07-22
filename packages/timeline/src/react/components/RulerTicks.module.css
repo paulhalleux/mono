@@ -1,0 +1,9 @@
+.ruler-ticks {
+  position: relative;
+  overflow: hidden;
+}
+
+.tick {
+  position: absolute;
+  height: 100%;
+}

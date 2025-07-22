@@ -11,6 +11,7 @@ import {
 import { Timeline } from "./react/components/Timeline.tsx";
 import { Waveform as WaveformComponent } from "./waveform.tsx";
 
+const rulerHeight = 32;
 const trackHeaderWidth = 200;
 const tracks: TrackDef[] = Array.from({ length: 50 }).map((_, i) => ({
   id: `track-${i}`,
@@ -32,6 +33,7 @@ export function Docs() {
     trackHeaderWidth,
     tracks,
     items,
+    rulerHeight,
   });
 
   return (
@@ -41,14 +43,19 @@ export function Docs() {
           <Controls waveform={waveform} setWaveform={setWaveform} />
         </div>
         <Timeline.Viewport ref={timelineRef} className="docs-box">
-          {/*<header*/}
-          {/*  style={{*/}
-          {/*    background: "#353535",*/}
-          {/*    color: "#ffffff",*/}
-          {/*    height: "32px",*/}
-          {/*    borderBottom: "1px solid #222222",*/}
-          {/*  }}*/}
-          {/*></header>*/}
+          <Timeline.Ruler className="docs-ruler">
+            <Timeline.RulerHeader
+              className="docs-ruler-header"
+              style={{
+                borderRight: "1px solid #222222",
+              }}
+            >
+              Header
+            </Timeline.RulerHeader>
+            <Timeline.RulerTicks>
+              {(time) => <div className="docs-tick">{millsToTime(time)}</div>}
+            </Timeline.RulerTicks>
+          </Timeline.Ruler>
           <Timeline.Tracks>
             {timeline.getTracks().map((track) => (
               <Timeline.Track
@@ -98,9 +105,11 @@ const Controls = ({
   const timeline = useTimelineApi();
   const timePosition = useTimelineStore((_, api) => api.getTimePosition());
   const viewport = useTimelineStore((st) => st.viewportState);
+  const tickIntervalTime = useTimelineStore((st) => st.tickIntervalTime);
 
   return (
     <>
+      {tickIntervalTime}
       <pre>{JSON.stringify(viewport, null, 2)}</pre>
       <input
         type="range"
@@ -127,5 +136,22 @@ const Controls = ({
         }}
       />
     </>
+  );
+};
+
+const millsToTime = (ms: number) => {
+  const days = Math.floor(ms / (24 * 60 * 60 * 1000));
+  const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+  const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+  const seconds = Math.floor((ms % (60 * 1000)) / 1000);
+
+  const units = ["d", "h", "m", "s"];
+  const values = [days, hours, minutes, seconds];
+
+  return (
+    values
+      .map((value, index) => (value > 0 ? `${value}${units[index]}` : ""))
+      .filter(Boolean)
+      .join(" ") || ""
   );
 };

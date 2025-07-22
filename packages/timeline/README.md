@@ -5,10 +5,12 @@
 ## Todo
 - [ ] Zone selection
 - [ ] Keyboard selection
-- [ ] Ruler
 - [ ] Resizable track header
 - [ ] Dynamic tracks
 - [ ] Dynamic items
+- [ ] Dynamic options (can change at runtime)
+- [ ] Nowline
+- [ ] Playable nowline
 - ... to be continued
 
 ## Done
@@ -18,3 +20,4 @@
 - [x] Virtualization
 - [x] Basic memoization of track & item instances
 - [x] Waveform module
+- [x] Ruler

@@ -6,6 +6,7 @@ import {
   TrackInstance as TimelineTrackInstance,
 } from "../types";
 import { memoize } from "../utils/memoize.ts";
+import { timeToWidth } from "../utils/scale.ts";
 import { binarySearchIndex } from "../utils/search.ts";
 
 const DEFAULT_TRACK_HEADER_WIDTH = 0;
@@ -16,6 +17,20 @@ const DEFAULT_CHUNK_SIZE = 640; // 640x viewport width
 type ChunkedPosition = {
   index: number; // Index of the chunk
   offset: number; // Offset within the chunk
+};
+
+type ViewportState = {
+  viewportWidth: number;
+  viewportDuration: number;
+  timelineWidth: number;
+  zoomLevel: number;
+  timePositionOffsetPx: number;
+  chunkedPosition: ChunkedPosition;
+  virtualizedTracks: {
+    startIndex: number;
+    endIndex: number;
+    totalHeight: number;
+  };
 };
 
 export declare namespace Core {
@@ -51,24 +66,13 @@ export declare namespace Core {
 
   export interface State {
     itemsByTrack: Record<string, ItemDef[]>;
-    viewportState: {
-      viewportWidth: number;
-      viewportDuration: number;
-      timelineWidth: number;
-      zoomLevel: number;
-      timePositionOffsetPx: number;
-      chunkedPosition: ChunkedPosition;
-      virtualizedTracks: {
-        startIndex: number;
-        endIndex: number;
-        totalHeight: number;
-      };
-    };
+    viewportState: ViewportState;
   }
 
   export interface Events {
     "element:mounted": { element: HTMLElement };
     "element:unmounted": void;
+    "viewport:updated": ViewportState;
   }
 }
 
@@ -224,6 +228,8 @@ export const CoreTimelineFeature: TimelineFeature<
       api.setState((draft) => {
         draft.viewportState.timePositionOffsetPx = timePositionOffsetPx;
       });
+
+      api.eventEmitter.emit("viewport:updated", viewportState);
     };
 
     /**
@@ -247,9 +253,7 @@ export const CoreTimelineFeature: TimelineFeature<
     const getItemWidthPx = (duration: number): number => {
       const { viewportState } = api.store.getState();
       const { viewportWidth, viewportDuration } = viewportState;
-
-      const ratio = duration / viewportDuration;
-      return viewportWidth * ratio;
+      return timeToWidth(duration, viewportWidth, viewportDuration);
     };
 
     const getTracksMemo = memoize(() => {
@@ -281,16 +285,22 @@ export const CoreTimelineFeature: TimelineFeature<
       const handler = () => {
         const tracks = getTracksMemo();
 
-        const startIndex = binarySearchIndex(
-          tracks,
-          (track) => track.top + track.height > element.scrollTop,
-          true,
+        const startIndex = Math.max(
+          0,
+          binarySearchIndex(
+            tracks,
+            (track) => track.top + track.height > element.scrollTop,
+            true,
+          ) - 4,
         );
 
-        const endIndex = binarySearchIndex(
-          tracks,
-          (track) => track.top < element.scrollTop + element.clientHeight,
-          false,
+        const endIndex = Math.min(
+          binarySearchIndex(
+            tracks,
+            (track) => track.top < element.scrollTop + element.clientHeight,
+            false,
+          ) + 4,
+          tracks.length - 1,
         );
 
         api.setState((draft) => {

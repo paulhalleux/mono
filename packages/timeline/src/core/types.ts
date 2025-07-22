@@ -5,6 +5,7 @@ import type { Store, StoreBuilder, StoreUpdater } from "../types/store.ts";
 
 import type { Core } from "./features/core.ts";
 import { ItemSelection } from "./features/item-selection.ts";
+import { Ruler } from "./features/ruler.ts";
 
 /**
  * Track definition.
@@ -56,13 +57,17 @@ export type InternalTimelineOptions = {
 export interface TimelineOptions
   extends InternalTimelineOptions,
     Core.Options,
-    ItemSelection.Options {}
+    ItemSelection.Options,
+    Ruler.Options {}
 
 /**
  * Timeline module state.
  * This interface defines the state of the Timeline module.
  */
-export interface TimelineState extends Core.State, ItemSelection.State {}
+export interface TimelineState
+  extends Core.State,
+    ItemSelection.State,
+    Ruler.State {}
 
 /**
  * Timeline events.

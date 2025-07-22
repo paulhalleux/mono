@@ -1,6 +1,9 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
+import { clsx } from "clsx";
 
 import { useTimelineStore } from "../adapter.ts";
+
+import styles from "./Viewport.module.css";
 
 export type ViewportProps = React.PropsWithChildren<{
   ref: (instance: HTMLElement | null) => void;
@@ -10,6 +13,7 @@ export type ViewportProps = React.PropsWithChildren<{
 export const Viewport = memo(function Viewport({
   children,
   ref,
+  className,
   ...rest
 }: ViewportProps) {
   const totalHeight = useTimelineStore(
@@ -17,14 +21,10 @@ export const Viewport = memo(function Viewport({
   );
 
   return (
-    <div
-      ref={ref}
-      style={{
-        overflow: "auto",
-      }}
-      {...rest}
-    >
-      <div style={{ height: totalHeight }}>{children}</div>
+    <div ref={ref} className={clsx(styles.viewport, className)} {...rest}>
+      <div style={useMemo(() => ({ height: totalHeight }), [totalHeight])}>
+        {children}
+      </div>
     </div>
   );
 });

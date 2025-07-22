@@ -7,6 +7,7 @@ import { createDefaultStore, createStoreUpdater } from "../utils/store.ts";
 
 import { CoreTimelineFeature } from "./features/core.ts";
 import { ItemSelectionFeature } from "./features/item-selection.ts";
+import { RulerFeature } from "./features/ruler.ts";
 import {
   InternalTimelineApi,
   ItemDef,
@@ -21,7 +22,11 @@ import {
 
 enableMapSet();
 
-const BUILT_IN_FEATURES = [CoreTimelineFeature, ItemSelectionFeature];
+const BUILT_IN_FEATURES = [
+  CoreTimelineFeature,
+  ItemSelectionFeature,
+  RulerFeature,
+];
 
 export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   const features = BUILT_IN_FEATURES;
