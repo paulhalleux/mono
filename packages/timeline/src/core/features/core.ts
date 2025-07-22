@@ -1,4 +1,12 @@
-import { TimelineFeature } from "../types";
+import {
+  ItemDef,
+  ItemInstance as TimelineItemInstance,
+  TimelineFeature,
+  TrackDef,
+  TrackInstance as TimelineTrackInstance,
+} from "../types";
+import { memoize } from "../utils/memoize.ts";
+import { binarySearchIndex } from "../utils/search.ts";
 
 const DEFAULT_TRACK_HEADER_WIDTH = 0;
 const DEFAULT_MIN_VISIBLE_DURATION = 1000 * 10; // 10 seconds
@@ -19,15 +27,30 @@ export declare namespace Core {
     getTimePosition(): number;
     getItemOffsetPx(timePosition: number): number;
     getItemWidthPx(duration: number): number;
+    getTracks(): TimelineTrackInstance[];
+  }
+
+  export interface ItemInstance {
+    left: number;
+    width: number;
+    duration: number;
+  }
+
+  export interface TrackInstance {
+    top: number;
+    getItems(): TimelineItemInstance[];
   }
 
   export interface Options {
     trackHeaderWidth?: number;
     minVisibleDuration?: number;
     maxVisibleDuration?: number;
+    tracks?: TrackDef[];
+    items?: ItemDef[];
   }
 
   export interface State {
+    itemsByTrack: Record<string, ItemDef[]>;
     viewportState: {
       viewportWidth: number;
       viewportDuration: number;
@@ -35,6 +58,11 @@ export declare namespace Core {
       zoomLevel: number;
       timePositionOffsetPx: number;
       chunkedPosition: ChunkedPosition;
+      virtualizedTracks: {
+        startIndex: number;
+        endIndex: number;
+        totalHeight: number;
+      };
     };
   }
 
@@ -49,7 +77,7 @@ export const CoreTimelineFeature: TimelineFeature<
   Core.Options,
   Core.State
 > = {
-  getInitialState() {
+  getInitialState(options) {
     return {
       viewportState: {
         viewportWidth: 0,
@@ -57,11 +85,26 @@ export const CoreTimelineFeature: TimelineFeature<
         timelineWidth: 0,
         zoomLevel: 1,
         timePositionOffsetPx: 0,
+        virtualizedTracks: {
+          startIndex: 0,
+          endIndex: 0,
+          totalHeight: 0,
+        },
         chunkedPosition: {
           index: 0,
           offset: 0,
         },
       },
+      itemsByTrack: (options.items ?? []).reduce<Record<string, ItemDef[]>>(
+        (acc, item) => {
+          if (!acc[item.trackId]) {
+            acc[item.trackId] = [];
+          }
+          acc[item.trackId].push(item);
+          return acc;
+        },
+        {},
+      ),
     };
   },
   createTimeline: (api, options) => {
@@ -85,6 +128,10 @@ export const CoreTimelineFeature: TimelineFeature<
     const mount = (element: HTMLElement) => {
       resizeObserver.observe(element);
       api.eventEmitter.emit("element:mounted", { element });
+      registerScrollListener(element, {
+        signal: api.abortSignal,
+        initialRun: true,
+      });
     };
 
     /**
@@ -102,6 +149,10 @@ export const CoreTimelineFeature: TimelineFeature<
       api.eventEmitter.emit("element:unmounted");
     };
 
+    /**
+     * Sets the zoom level of the timeline.
+     * @param zoomLevel The zoom level to set, between 0 and 1.
+     */
     const setZoomLevel = (zoomLevel: number) => {
       api.setState((draft) => {
         const roundedZoomLevel = Math.round(zoomLevel * 1000) / 1000;
@@ -129,6 +180,10 @@ export const CoreTimelineFeature: TimelineFeature<
       recomputeViewport();
     };
 
+    /**
+     * Sets the time position of the timeline.
+     * @param position The time position to set in milliseconds.
+     */
     const setTimePosition = (position: number) => {
       api.setState((draft) => {
         const chunkDuration =
@@ -142,6 +197,10 @@ export const CoreTimelineFeature: TimelineFeature<
       recomputeViewport();
     };
 
+    /**
+     * Gets the current time position of the timeline.
+     * @returns The current time position in milliseconds.
+     */
     const getTimePosition = () => {
       const { chunkedPosition, viewportDuration } =
         api.store.getState().viewportState;
@@ -149,6 +208,10 @@ export const CoreTimelineFeature: TimelineFeature<
       return chunkedPosition.index * chunkDuration + chunkedPosition.offset;
     };
 
+    /**
+     * Recomputes the viewport state based on the current chunked position.
+     * It calculates the time position offset in pixels and updates the viewport state.
+     */
     const recomputeViewport = () => {
       const { viewportState } = api.store.getState();
       const { viewportDuration, chunkedPosition } = viewportState;
@@ -159,11 +222,15 @@ export const CoreTimelineFeature: TimelineFeature<
       );
 
       api.setState((draft) => {
-        draft.viewportState.timePositionOffsetPx =
-          Math.floor(timePositionOffsetPx);
+        draft.viewportState.timePositionOffsetPx = timePositionOffsetPx;
       });
     };
 
+    /**
+     * Gets the pixel offset for a given time position.
+     * @param timePosition The time position in milliseconds.
+     * @returns The pixel offset for the given time position.
+     */
     const getItemOffsetPx = (timePosition: number): number => {
       const { viewportWidth, viewportDuration } =
         api.store.getState().viewportState;
@@ -172,12 +239,74 @@ export const CoreTimelineFeature: TimelineFeature<
       return timePosition * msInPx;
     };
 
+    /**
+     * Gets the pixel width for a given duration.
+     * @param duration The duration in milliseconds.
+     * @returns The pixel width for the given duration.
+     */
     const getItemWidthPx = (duration: number): number => {
       const { viewportState } = api.store.getState();
       const { viewportWidth, viewportDuration } = viewportState;
 
       const ratio = duration / viewportDuration;
-      return Math.round(viewportWidth * ratio);
+      return viewportWidth * ratio;
+    };
+
+    const getTracksMemo = memoize(() => {
+      let prev: TimelineTrackInstance;
+      return (options.tracks ?? []).map((def) => {
+        const instance = api._internal.createTrack(def, prev);
+        prev = instance;
+        return instance;
+      });
+    }, [options.tracks]);
+
+    const getTracks = () => {
+      const {
+        viewportState: { virtualizedTracks },
+      } = api.store.getState();
+      return getTracksMemo().slice(
+        virtualizedTracks.startIndex,
+        virtualizedTracks.endIndex + 1,
+      );
+    };
+
+    const registerScrollListener = (
+      element: HTMLElement,
+      options: {
+        signal: AbortSignal;
+        initialRun?: boolean;
+      },
+    ) => {
+      const handler = () => {
+        const tracks = getTracksMemo();
+
+        const startIndex = binarySearchIndex(
+          tracks,
+          (track) => track.top + track.height > element.scrollTop,
+          true,
+        );
+
+        const endIndex = binarySearchIndex(
+          tracks,
+          (track) => track.top < element.scrollTop + element.clientHeight,
+          false,
+        );
+
+        api.setState((draft) => {
+          draft.viewportState.virtualizedTracks = {
+            startIndex: startIndex >= 0 ? startIndex : 0,
+            endIndex: endIndex >= 0 ? endIndex : tracks.length - 1,
+            totalHeight:
+              (tracks.at(-1)?.top ?? 0) + (tracks.at(-1)?.height ?? 0),
+          };
+        });
+      };
+
+      element.addEventListener("scroll", handler, { signal: options.signal });
+      if (options.initialRun) {
+        handler();
+      }
     };
 
     return {
@@ -188,6 +317,64 @@ export const CoreTimelineFeature: TimelineFeature<
       getTimePosition,
       getItemOffsetPx,
       getItemWidthPx,
+      getTracks,
+    };
+  },
+  createItem(api, itemDef) {
+    return {
+      left: api.getItemOffsetPx(itemDef.start),
+      width: api.getItemWidthPx(itemDef.end - itemDef.start),
+      duration: itemDef.end - itemDef.start,
+    };
+  },
+  createTrack(api, { id }, previousTrack) {
+    const getItems = memoize(
+      (trackId: string) => {
+        const itemDefs = api.store.getState().itemsByTrack[trackId] || [];
+        return itemDefs.map(api._internal.createItem);
+      },
+      (trackId) => {
+        const { itemsByTrack, viewportState } = api.store.getState();
+        return [
+          itemsByTrack[trackId],
+          viewportState.viewportDuration,
+          viewportState.viewportWidth,
+        ];
+      },
+    );
+
+    return {
+      top: (previousTrack?.top ?? 0) + (previousTrack?.height ?? 0),
+      getItems: () =>
+        virtualizeItems(
+          getItems(id),
+          api.getTimePosition(),
+          api.store.getState().viewportState.viewportDuration,
+        ),
     };
   },
 };
+
+function virtualizeItems(
+  items: TimelineItemInstance[],
+  timePosition: number,
+  viewportDuration: number,
+): TimelineItemInstance[] {
+  if (items.length === 0) return [];
+
+  const startIndex = binarySearchIndex(
+    items,
+    (item) => item.end > timePosition,
+    true,
+  );
+
+  const endIndex = binarySearchIndex(
+    items,
+    (item) => item.start < timePosition + viewportDuration,
+    false,
+  );
+
+  if (startIndex >= items.length || endIndex < 0) return [];
+
+  return items.slice(startIndex, endIndex + 1);
+}

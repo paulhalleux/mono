@@ -1,7 +1,85 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
 * {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
   min-width: 0;
   min-height: 0;
+}
+
+.docs-container {
+  background: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  gap: 10px;
+  padding: 10px;
+  color: #ffffff;
+  font-family: "Inter", sans-serif;
+}
+
+.docs-box {
+  background: #2e2e2e;
+  height: 50%;
+  border-radius: 5px;
+}
+
+.docs-track {
+  border-bottom: 1px solid #222222;
+}
+
+.docs-track-header {
+  background: #2c2c2c;
+  border-right: 1px solid #222222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.docs-timeline-item {
+  position: absolute;
+  height: 100%;
+  background: #389ab8;
+  border: 1px solid #ffffff20;
+  border-left-color: rgba(0,0,0,0.25);
+  border-radius: 2px;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 0 4px;
+
+  &:hover {
+    background: #3593af;
+  }
+
+  &.selected {
+    background: #2c7f9b;
+
+    outline-offset: -1px;
+    outline: 1px solid rgba(255, 255, 255,0.75);
+
+    &:after,
+    &:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: #ffffff;
+    }
+
+    &:before {
+      left: 0;
+    }
+
+    &:after {
+      right: 0;
+    }
+  }
 }
