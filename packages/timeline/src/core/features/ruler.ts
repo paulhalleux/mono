@@ -1,6 +1,9 @@
 import { TimelineFeature } from "../types";
+import { memoize } from "../utils/memoize.ts";
 import { getTickIntervalTime } from "../utils/ruler.ts";
 import { timeToWidth } from "../utils/scale.ts";
+
+import { ViewportState } from "./core.ts";
 
 export declare namespace Ruler {
   export interface Options {
@@ -26,10 +29,9 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
     };
   },
   createTimeline: (api) => {
-    api.eventEmitter.on("viewport:updated", (viewport) => {
-      const tickIntervalTime = getTickIntervalTime(viewport, 100);
-      api.setState((draft) => {
-        draft.tickIntervalTime = tickIntervalTime;
+    const getTicks = memoize(
+      (viewport: ViewportState) => {
+        const tickIntervalTime = getTickIntervalTime(viewport, 100);
         const ticksCount =
           Math.ceil(viewport.viewportDuration / tickIntervalTime) + 1;
 
@@ -43,20 +45,39 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
           viewport.viewportDuration,
         );
 
-        draft.ticks = Array.from({ length: ticksCount }, (_, i) => {
-          const time = i * tickIntervalTime + scrollDelta * tickIntervalTime;
-          return {
-            time: time,
-            width: tickWidth,
-            left: timeToWidth(
-              time,
-              viewport.viewportWidth,
-              viewport.viewportDuration,
-            ),
-          };
-        });
+        return {
+          ticks: Array.from({ length: ticksCount }, (_, i) => {
+            const time = i * tickIntervalTime + scrollDelta * tickIntervalTime;
+            return {
+              time: time,
+              width: tickWidth,
+              left: timeToWidth(
+                time,
+                viewport.viewportWidth,
+                viewport.viewportDuration,
+              ),
+            };
+          }),
+          tickIntervalTime,
+        };
+      },
+      (viewport) => {
+        return [
+          viewport.viewportWidth,
+          viewport.viewportDuration,
+          viewport.chunkedPosition.offset,
+        ];
+      },
+    );
+
+    api.eventEmitter.on("viewport:updated", (viewport) => {
+      api.setState((draft) => {
+        const { ticks, tickIntervalTime } = getTicks(viewport);
+        draft.ticks = ticks;
+        draft.tickIntervalTime = tickIntervalTime;
       });
     });
+
     return {};
   },
 };

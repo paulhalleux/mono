@@ -53,7 +53,12 @@ export function Docs() {
               Header
             </Timeline.RulerHeader>
             <Timeline.RulerTicks>
-              {(time) => <div className="docs-tick">{millsToTime(time)}</div>}
+              {(time) => (
+                <div className="docs-tick">
+                  {millsToTime(time)}
+                  <span className="docs-subticks" />
+                </div>
+              )}
             </Timeline.RulerTicks>
           </Timeline.Ruler>
           <Timeline.Tracks>

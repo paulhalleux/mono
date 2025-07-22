@@ -45,7 +45,6 @@ export function getTickIntervalTime(
       viewport.viewportDuration,
     );
 
-    console.log(duration, width);
     if (width >= expectedWidth) {
       return duration;
     }

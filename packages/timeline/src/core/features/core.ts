@@ -19,7 +19,7 @@ type ChunkedPosition = {
   offset: number; // Offset within the chunk
 };
 
-type ViewportState = {
+export type ViewportState = {
   viewportWidth: number;
   viewportDuration: number;
   timelineWidth: number;
