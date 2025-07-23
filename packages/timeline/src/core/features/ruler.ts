@@ -5,9 +5,12 @@ import { timeToWidth } from "../utils/scale.ts";
 
 import { ViewportState } from "./core.ts";
 
+const DEFAULT_MIN_TICK_INTERVAL_WIDTH = 240;
+
 export declare namespace Ruler {
   export interface Options {
     rulerHeight?: number;
+    minTickIntervalWidth?: number;
   }
 
   export interface State {
@@ -31,7 +34,14 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
   createTimeline: (api) => {
     const getTicks = memoize({
       factory: (viewport: ViewportState) => {
-        const tickIntervalTime = getTickIntervalTime(viewport, 100);
+        const { minTickIntervalWidth = DEFAULT_MIN_TICK_INTERVAL_WIDTH } =
+          api.options;
+
+        const tickIntervalTime = getTickIntervalTime(
+          viewport,
+          minTickIntervalWidth,
+        );
+
         const ticksCount =
           Math.ceil(viewport.viewportDuration / tickIntervalTime) + 1;
 
