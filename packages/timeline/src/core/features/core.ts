@@ -5,7 +5,6 @@ import {
   TrackDef,
   TrackInstance as TimelineTrackInstance,
 } from "../types";
-import { memoize } from "../utils/memoize.ts";
 import { memoizeArrayItems } from "../utils/memoize-array.ts";
 import { timeToWidth } from "../utils/scale.ts";
 import { binarySearchIndex } from "../utils/search.ts";
@@ -261,15 +260,18 @@ export const CoreTimelineFeature: TimelineFeature<
       return timeToWidth(duration, viewportWidth, viewportDuration);
     };
 
-    const getTracksMemo = memoize({
-      deps: () => [options.tracks],
-      factory: () => {
-        let prev: TimelineTrackInstance;
-        return (options.tracks ?? []).map((def) => {
-          const instance = api._internal.createTrack(def, prev);
-          prev = instance;
-          return instance;
-        });
+    const getTracksMemo = memoizeArrayItems<TimelineTrackInstance, []>({
+      deps: (index) => {
+        const { tracks = [] } = api.options;
+        return [tracks[index]];
+      },
+      itemCountFn: () => options.tracks?.length ?? 0,
+      itemFactory: (index, prev) => {
+        const trackDef = options.tracks?.[index];
+        if (!trackDef) {
+          throw new Error(`Track definition at index ${index} is undefined`);
+        }
+        return api._internal.createTrack(trackDef, prev);
       },
     });
 
@@ -350,27 +352,29 @@ export const CoreTimelineFeature: TimelineFeature<
     };
   },
   createTrack(api, { id }, previousTrack) {
-    const getItems = memoizeArrayItems({
-      deps: (index, [trackId]: [trackId: string]) => {
-        const { itemsByTrack, viewportState, selectedItems } =
-          api.store.getState();
-        const item = itemsByTrack[trackId][index];
-        return [
-          item,
-          selectedItems.has(item.id),
-          viewportState.viewportWidth,
-          viewportState.viewportDuration,
-        ];
+    const getItems = memoizeArrayItems<TimelineItemInstance, [trackId: string]>(
+      {
+        deps: (index, [trackId]: [trackId: string]) => {
+          const { itemsByTrack, viewportState, selectedItems } =
+            api.store.getState();
+          const item = itemsByTrack[trackId][index];
+          return [
+            item,
+            selectedItems.has(item.id),
+            viewportState.viewportWidth,
+            viewportState.viewportDuration,
+          ];
+        },
+        itemFactory: (index, _, [trackId]) => {
+          const item = api.store.getState().itemsByTrack[trackId][index];
+          return api._internal.createItem(item);
+        },
+        itemCountFn: (trackId) => {
+          const items = api.store.getState().itemsByTrack[trackId];
+          return items ? items.length : 0;
+        },
       },
-      itemFactory: (index, [trackId]) => {
-        const item = api.store.getState().itemsByTrack[trackId][index];
-        return api._internal.createItem(item);
-      },
-      itemCountFn: (trackId) => {
-        const items = api.store.getState().itemsByTrack[trackId];
-        return items ? items.length : 0;
-      },
-    });
+    );
 
     return {
       top: (previousTrack?.top ?? 0) + (previousTrack?.height ?? 0),

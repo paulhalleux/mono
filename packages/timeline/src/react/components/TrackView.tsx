@@ -1,7 +1,11 @@
 import React, { memo, useMemo } from "react";
 import { clsx } from "clsx";
 
-import { ItemInstance, TimelineState } from "../../core/types.ts";
+import {
+  ItemInstance,
+  TimelineState,
+  TrackInstance,
+} from "../../core/types.ts";
 import { useTimelineStore } from "../adapter.ts";
 
 import { TrackProvider } from "./Track.tsx";
@@ -9,7 +13,7 @@ import { TrackProvider } from "./Track.tsx";
 import styles from "./TrackView.module.css";
 
 export type TrackViewProps = {
-  children: (item: ItemInstance) => React.ReactNode;
+  children: (item: ItemInstance, track: TrackInstance) => React.ReactNode;
 } & Omit<React.ComponentPropsWithoutRef<"div">, "children">;
 
 const viewportWidthSelector = (state: TimelineState) =>
@@ -54,9 +58,12 @@ export const TrackView = memo(function TrackView({
         )}
         className={styles["translate-container"]}
       >
-        {items.map((item) => (
-          <React.Fragment key={item.id}>{children(item)}</React.Fragment>
-        ))}
+        {track &&
+          items.map((item) => (
+            <React.Fragment key={item.id}>
+              {children(item, track)}
+            </React.Fragment>
+          ))}
       </div>
     </div>
   );

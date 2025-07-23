@@ -29,7 +29,7 @@ export function memoizeArrayItems<T, A extends any[]>({
   deps,
   compareItem = defaultCompareItem,
 }: {
-  itemFactory: (index: number, args: A) => T;
+  itemFactory: (index: number, prevItem: T | undefined, args: A) => T;
   itemCountFn: (...args: A) => number;
   deps: (index: number, args: A) => any;
   compareItem?: ItemComparator;
@@ -39,18 +39,18 @@ export function memoizeArrayItems<T, A extends any[]>({
   return (...args: A): T[] => {
     const count = itemCountFn(...args);
     if (!cache || cache.items.length !== count) {
-      cache = {
-        items: Array.from({ length: count }, (_, i) => {
-          const value = itemFactory(i, args);
-          const dep = deps(i, args);
-          return { value, dep };
-        }),
-      };
+      const items: MemoizedItemCache<T>[] = [];
+      for (let i = 0; i < count; i++) {
+        const value = itemFactory(i, items[i - 1]?.value, args);
+        const dep = deps(i, args);
+        items.push({ value, dep });
+      }
+      cache = { items };
     } else {
       for (let i = 0; i < count; i++) {
         const newDep = deps(i, args);
         if (!compareItem(cache.items[i].dep, newDep)) {
-          const newValue = itemFactory(i, args);
+          const newValue = itemFactory(i, cache.items[i - 1]?.value, args);
           cache.items[i] = {
             value: newValue,
             dep: newDep,

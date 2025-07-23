@@ -2,7 +2,12 @@ import React, { useCallback } from "react";
 import { clsx } from "clsx";
 import { useShallow } from "zustand/react/shallow";
 
-import { ItemDef, TrackDef } from "./core/types.ts";
+import {
+  ItemDef,
+  ItemInstance,
+  TrackDef,
+  TrackInstance,
+} from "./core/types.ts";
 import { Waveform } from "./modules/waveform.ts";
 import {
   TimelineProvider,
@@ -41,7 +46,28 @@ export function Docs() {
     rulerHeight,
   });
 
-  const trackInstaces = timeline.store(useShallow(() => timeline.getTracks()));
+  const trackInstances = timeline.store(useShallow(() => timeline.getTracks()));
+
+  const renderTrackItem = useCallback(
+    (item: ItemInstance, track: TrackInstance) => (
+      <Timeline.Item
+        key={item.id}
+        item={item}
+        className={clsx("docs-timeline-item", {
+          ["selected"]: item.isSelected,
+        })}
+      >
+        {waveform.length > 0 && (
+          <WaveformComponent
+            waveform={waveform}
+            width={item.width}
+            height={track.height}
+          />
+        )}
+      </Timeline.Item>
+    ),
+    [waveform],
+  );
 
   return (
     <TimelineProvider value={timeline}>
@@ -86,7 +112,7 @@ export function Docs() {
               </Timeline.RulerTicks>
             </Timeline.Ruler>
             <Timeline.Tracks>
-              {trackInstaces.map((track) => (
+              {trackInstances.map((track) => (
                 <Timeline.Track
                   key={track.id}
                   track={track}
@@ -95,25 +121,7 @@ export function Docs() {
                   <Timeline.TrackHeader className="docs-track-header">
                     {track.top}
                   </Timeline.TrackHeader>
-                  <Timeline.TrackView>
-                    {(item) => (
-                      <Timeline.Item
-                        key={item.id}
-                        item={item}
-                        className={clsx("docs-timeline-item", {
-                          ["selected"]: item.isSelected,
-                        })}
-                      >
-                        {waveform.length > 0 && (
-                          <WaveformComponent
-                            waveform={waveform}
-                            width={item.width}
-                            height={track.height}
-                          />
-                        )}
-                      </Timeline.Item>
-                    )}
-                  </Timeline.TrackView>
+                  <Timeline.TrackView>{renderTrackItem}</Timeline.TrackView>
                 </Timeline.Track>
               ))}
             </Timeline.Tracks>

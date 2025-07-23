@@ -94,7 +94,7 @@ export type InternalTimelineApi = {
   _internal: {
     createTrack: (
       trackDef: TrackDef,
-      previousTrack: TrackInstance,
+      previousTrack: TrackInstance | undefined,
     ) => TrackInstance;
     createItem: (itemDef: ItemDef) => ItemInstance;
   };

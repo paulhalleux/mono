@@ -17,6 +17,9 @@
 - [ ] Feature flags
 - [ ] Item fetch
 - [ ] Track overlay
+- [ ] Define re-compute dependency in features
+- [ ] Track grouping
+- [ ] Sub-tracks w/ expanded/collapsed
 - ... to be continued
 
 ## Done
