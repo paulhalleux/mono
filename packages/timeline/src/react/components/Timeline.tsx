@@ -1,9 +1,11 @@
 import React from "react";
+import { clsx } from "clsx";
 
 import { TimelineApi } from "../../core/types.ts";
 import { TimelineProvider } from "../adapter.ts";
 
 import { Item } from "./Item.tsx";
+import { Overlay } from "./Overlay.tsx";
 import { Ruler } from "./Ruler.tsx";
 import { RulerHeader } from "./RulerHeader.tsx";
 import { RulerTicks } from "./RulerTicks.tsx";
@@ -13,12 +15,29 @@ import { Tracks } from "./Tracks.tsx";
 import { TrackView } from "./TrackView.tsx";
 import { Viewport } from "./Viewport.tsx";
 
-export type TimelineProps = React.PropsWithChildren<{
-  timeline: TimelineApi;
-}>;
+import styles from "./Timeline.module.css";
 
-export function Timeline({ timeline, children }: TimelineProps) {
-  return <TimelineProvider value={timeline}>{children}</TimelineProvider>;
+export type TimelineProps = React.PropsWithChildren<{
+  timeline?: TimelineApi;
+}> &
+  React.ComponentProps<"div">;
+
+export function Timeline({
+  children,
+  className,
+  timeline,
+  ...rest
+}: TimelineProps) {
+  const timelineContext = React.use(TimelineProvider);
+  const tl = timelineContext || timeline;
+  if (!tl) {
+    throw new Error("Timeline context or timeline prop is required");
+  }
+  return (
+    <div className={clsx(styles.timeline, className)} {...rest}>
+      <TimelineProvider value={tl}>{children}</TimelineProvider>
+    </div>
+  );
 }
 
 Timeline.Tracks = Tracks;
@@ -30,3 +49,4 @@ Timeline.Item = Item;
 Timeline.Ruler = Ruler;
 Timeline.RulerHeader = RulerHeader;
 Timeline.RulerTicks = RulerTicks;
+Timeline.Overlay = Overlay;

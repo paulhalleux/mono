@@ -50,11 +50,13 @@ export declare namespace Core {
     leftOffset: number;
     width: number;
     duration: number;
+    attributes: Record<string, any>;
   }
 
   export interface TrackInstance {
     top: number;
     getItems(): TimelineItemInstance[];
+    attributes: Record<string, any>;
   }
 
   export interface Options {
@@ -341,6 +343,10 @@ export const CoreTimelineFeature: TimelineFeature<
       leftOffset: api.getItemOffsetPx(itemDef.start),
       width: api.getItemWidthPx(itemDef.end - itemDef.start),
       duration: itemDef.end - itemDef.start,
+      attributes: {
+        "data-item-id": itemDef.id,
+        "data-parent-track-id": itemDef.trackId,
+      },
     };
   },
   createTrack(api, { id }, previousTrack) {
@@ -368,6 +374,9 @@ export const CoreTimelineFeature: TimelineFeature<
 
     return {
       top: (previousTrack?.top ?? 0) + (previousTrack?.height ?? 0),
+      attributes: {
+        "data-track-id": id,
+      },
       getItems: () => {
         return virtualizeItems(
           getItems(id),

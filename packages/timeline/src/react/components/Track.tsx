@@ -32,6 +32,7 @@ export const Track = memo(function Track({
         )}
         className={clsx(styles.track, className)}
         {...rest}
+        {...track.attributes}
       >
         {children}
       </div>

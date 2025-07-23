@@ -39,6 +39,7 @@ export const Item = memo(function Item({
       )}
       data-item-id={item.id}
       {...rest}
+      {...item.attributes}
     >
       {children}
     </div>

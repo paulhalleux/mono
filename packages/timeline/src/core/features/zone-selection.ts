@@ -33,6 +33,13 @@ export const ZoneSelectionFeature: TimelineFeature<
   createTimeline: (api) => {
     const onMouseDown = (event: MouseEvent, element: HTMLElement) => {
       if (event.button !== 0) return;
+      if (
+        event.target instanceof HTMLElement &&
+        event.target.dataset.itemId &&
+        !event.ctrlKey
+      ) {
+        return;
+      }
 
       element.ownerDocument.body.style.userSelect = "none";
       const rect = element.getBoundingClientRect();
@@ -60,9 +67,10 @@ export const ZoneSelectionFeature: TimelineFeature<
       const { active, origin } = api.store.getState().zoneSelection;
       if (!active || !origin) return;
 
+      const rect = element.getBoundingClientRect();
       const end: XYPosition = {
-        x: event.clientX - element.offsetLeft,
-        y: event.clientY - element.offsetTop,
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
       };
 
       const startX = Math.min(origin.x, end.x);
@@ -73,8 +81,8 @@ export const ZoneSelectionFeature: TimelineFeature<
       api.setState((draft) => {
         draft.zoneSelection.end = end;
         draft.zoneSelection.drawRect = {
-          top: startY,
-          left: startX,
+          top: startY - (api.options.rulerHeight ?? 0),
+          left: startX - (api.options.trackHeaderWidth ?? 0),
           width,
           height,
         };

@@ -5,6 +5,7 @@ import { useShallow } from "zustand/react/shallow";
 import { ItemDef, TrackDef } from "./core/types.ts";
 import { Waveform } from "./modules/waveform.ts";
 import {
+  TimelineProvider,
   useTimeline,
   useTimelineApi,
   useTimelineStore,
@@ -43,79 +44,83 @@ export function Docs() {
   const trackInstaces = timeline.store(useShallow(() => timeline.getTracks()));
 
   return (
-    <div className="docs-container">
-      <Timeline timeline={timeline}>
+    <TimelineProvider value={timeline}>
+      <div className="docs-container">
         <div className="docs-box">
           <Controls waveform={waveform} setWaveform={setWaveform} />
         </div>
-        <Timeline.Viewport ref={timelineRef} className="docs-box">
-          <ZoneSelection />
-          <Timeline.Ruler className="docs-ruler">
-            <Timeline.RulerHeader
-              className="docs-ruler-header"
-              style={{
-                borderRight: "1px solid #222222",
-              }}
-            >
-              Header
-            </Timeline.RulerHeader>
-            <Timeline.RulerTicks>
-              {useCallback(
-                (time) => (
-                  <div className="docs-tick">
-                    {millsToTime(time)}
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={clsx("docs-subtick", {
-                          "docs-tick-line--small": i > 0,
-                        })}
-                        style={{
-                          left: `${(i + 1) * 10}%`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                ),
-                [],
-              )}
-            </Timeline.RulerTicks>
-          </Timeline.Ruler>
-          <Timeline.Tracks>
-            {trackInstaces.map((track) => (
-              <Timeline.Track
-                key={track.id}
-                track={track}
-                className="docs-track"
+        <Timeline className="docs-box">
+          <Timeline.Overlay>
+            <ZoneSelection />
+          </Timeline.Overlay>
+          <Timeline.Viewport ref={timelineRef}>
+            <Timeline.Ruler className="docs-ruler">
+              <Timeline.RulerHeader
+                className="docs-ruler-header"
+                style={{
+                  borderRight: "1px solid #222222",
+                }}
               >
-                <Timeline.TrackHeader className="docs-track-header">
-                  {track.top}
-                </Timeline.TrackHeader>
-                <Timeline.TrackView>
-                  {(item) => (
-                    <Timeline.Item
-                      key={item.id}
-                      item={item}
-                      className={clsx("docs-timeline-item", {
-                        ["selected"]: item.isSelected,
-                      })}
-                    >
-                      {waveform.length > 0 && (
-                        <WaveformComponent
-                          waveform={waveform}
-                          width={item.width}
-                          height={track.height}
+                Header
+              </Timeline.RulerHeader>
+              <Timeline.RulerTicks>
+                {useCallback(
+                  (time) => (
+                    <div className="docs-tick">
+                      {millsToTime(time)}
+                      {Array.from({ length: 9 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={clsx("docs-subtick", {
+                            "docs-tick-line--small": i > 0,
+                          })}
+                          style={{
+                            left: `${(i + 1) * 10}%`,
+                          }}
                         />
-                      )}
-                    </Timeline.Item>
-                  )}
-                </Timeline.TrackView>
-              </Timeline.Track>
-            ))}
-          </Timeline.Tracks>
-        </Timeline.Viewport>
-      </Timeline>
-    </div>
+                      ))}
+                    </div>
+                  ),
+                  [],
+                )}
+              </Timeline.RulerTicks>
+            </Timeline.Ruler>
+            <Timeline.Tracks>
+              {trackInstaces.map((track) => (
+                <Timeline.Track
+                  key={track.id}
+                  track={track}
+                  className="docs-track"
+                >
+                  <Timeline.TrackHeader className="docs-track-header">
+                    {track.top}
+                  </Timeline.TrackHeader>
+                  <Timeline.TrackView>
+                    {(item) => (
+                      <Timeline.Item
+                        key={item.id}
+                        item={item}
+                        className={clsx("docs-timeline-item", {
+                          ["selected"]: item.isSelected,
+                        })}
+                      >
+                        {waveform.length > 0 && (
+                          <WaveformComponent
+                            waveform={waveform}
+                            width={item.width}
+                            height={track.height}
+                          />
+                        )}
+                      </Timeline.Item>
+                    )}
+                  </Timeline.TrackView>
+                </Timeline.Track>
+              ))}
+            </Timeline.Tracks>
+          </Timeline.Viewport>
+        </Timeline>
+      </div>
+    </TimelineProvider>
   );
 }
 
