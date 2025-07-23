@@ -69,6 +69,26 @@ export function Docs() {
     [waveform],
   );
 
+  const renderTick = useCallback(
+    (time: number) => (
+      <div className="docs-tick">
+        {millsToTime(time)}
+        {Array.from({ length: 9 }).map((_, i) => (
+          <div
+            key={i}
+            className={clsx("docs-subtick", {
+              "docs-tick-line--small": i > 0,
+            })}
+            style={{
+              left: `${(i + 1) * 10}%`,
+            }}
+          />
+        ))}
+      </div>
+    ),
+    [],
+  );
+
   return (
     <TimelineProvider value={timeline}>
       <div className="docs-container">
@@ -77,39 +97,14 @@ export function Docs() {
         </div>
         <Timeline className="docs-box">
           <Timeline.Overlay>
-            <ZoneSelection />
+            <ZoneSelection className="docs-zone-selection" />
           </Timeline.Overlay>
           <Timeline.Viewport ref={timelineRef}>
             <Timeline.Ruler className="docs-ruler">
-              <Timeline.RulerHeader
-                className="docs-ruler-header"
-                style={{
-                  borderRight: "1px solid #222222",
-                }}
-              >
+              <Timeline.RulerHeader className="docs-ruler-header">
                 Header
               </Timeline.RulerHeader>
-              <Timeline.RulerTicks>
-                {useCallback(
-                  (time) => (
-                    <div className="docs-tick">
-                      {millsToTime(time)}
-                      {Array.from({ length: 9 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className={clsx("docs-subtick", {
-                            "docs-tick-line--small": i > 0,
-                          })}
-                          style={{
-                            left: `${(i + 1) * 10}%`,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  ),
-                  [],
-                )}
-              </Timeline.RulerTicks>
+              <Timeline.RulerTicks>{renderTick}</Timeline.RulerTicks>
             </Timeline.Ruler>
             <Timeline.Tracks>
               {trackInstances.map((track) => (

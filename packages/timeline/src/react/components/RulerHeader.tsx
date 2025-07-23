@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 import { clsx } from "clsx";
 
 import { TimelineApi } from "../../core/types.ts";
@@ -12,7 +12,7 @@ export type RulerHeaderProps = React.PropsWithChildren &
 const trackHeaderWidthSelector = (_: any, api: TimelineApi) =>
   api.options.trackHeaderWidth;
 
-export function RulerHeader({
+export const RulerHeader = memo(function RulerHeader({
   children,
   style,
   className,
@@ -35,4 +35,4 @@ export function RulerHeader({
       {children}
     </div>
   );
-}
+});

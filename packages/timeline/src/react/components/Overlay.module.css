@@ -1,0 +1,6 @@
+.overlay {
+  position: absolute;
+  z-index: 100;
+  overflow: hidden;
+  pointer-events: none;
+}

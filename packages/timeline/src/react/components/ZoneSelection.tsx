@@ -1,9 +1,30 @@
-import { memo } from "react";
+import React, { memo, useMemo } from "react";
+import { clsx } from "clsx";
 
+import { TimelineState } from "../../core/types.ts";
 import { useTimelineStore } from "../adapter.ts";
 
-export const ZoneSelection = memo(function ZoneSelection() {
-  const zoneSelection = useTimelineStore((state) => state.zoneSelection);
+import styles from "./ZoneSelection.module.css";
+
+export type ZoneSelectionProps = React.ComponentProps<"div">;
+
+const zoneSelectionSelector = (state: TimelineState) => state.zoneSelection;
+
+export const ZoneSelection = memo(function ZoneSelection({
+  children,
+  style,
+  className,
+  ...rest
+}: ZoneSelectionProps) {
+  const zoneSelection = useTimelineStore(zoneSelectionSelector);
+
+  const zoneStyle = useMemo(
+    () => ({
+      ...zoneSelection.drawRect,
+      ...style,
+    }),
+    [style, zoneSelection.drawRect],
+  );
 
   if (
     !zoneSelection.active ||
@@ -15,15 +36,8 @@ export const ZoneSelection = memo(function ZoneSelection() {
   }
 
   return (
-    <div
-      style={{
-        pointerEvents: "none",
-        backgroundColor: "rgba(255,255,255,0.3)",
-        border: "1px solid #fff",
-        position: "absolute",
-        zIndex: 1000,
-        ...zoneSelection.drawRect,
-      }}
-    />
+    <div className={clsx(styles.zone, className)} style={zoneStyle} {...rest}>
+      {children}
+    </div>
   );
 });

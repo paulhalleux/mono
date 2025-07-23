@@ -1,7 +1,9 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 
 import { TimelineApi, TimelineState } from "../../core/types.ts";
 import { useTimelineStore } from "../adapter.ts";
+
+import styles from "./Overlay.module.css";
 
 export type OverlayProps = React.PropsWithChildren;
 
@@ -13,19 +15,18 @@ const rulerHeightSelector = (_: TimelineState, api: TimelineApi) =>
 export const Overlay = memo(function Overlay({ children }: OverlayProps) {
   const trackHeaderWidth = useTimelineStore(trackHeaderWidthSelector);
   const rulerHeight = useTimelineStore(rulerHeightSelector);
-
   return (
     <div
-      style={{
-        position: "absolute",
-        top: rulerHeight,
-        left: trackHeaderWidth,
-        width: "calc(100% - " + trackHeaderWidth + "px)",
-        height: "calc(100% - " + rulerHeight + "px)",
-        zIndex: 1000,
-        overflow: "hidden",
-        pointerEvents: "none", // Prevents interaction with the overlay
-      }}
+      className={styles.overlay}
+      style={useMemo(
+        () => ({
+          top: rulerHeight,
+          left: trackHeaderWidth,
+          width: "calc(100% - " + trackHeaderWidth + "px)",
+          height: "calc(100% - " + rulerHeight + "px)",
+        }),
+        [rulerHeight, trackHeaderWidth],
+      )}
     >
       {children}
     </div>
