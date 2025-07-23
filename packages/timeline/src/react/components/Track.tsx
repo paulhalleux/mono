@@ -10,6 +10,8 @@ export type TrackProps = React.PropsWithChildren<{
 }> &
   React.ComponentPropsWithoutRef<"div">;
 
+export const TrackProvider = React.createContext<TrackInstance | null>(null);
+
 export const Track = memo(function Track({
   children,
   track,
@@ -18,19 +20,21 @@ export const Track = memo(function Track({
   ...rest
 }: TrackProps) {
   return (
-    <div
-      style={useMemo(
-        () => ({
-          height: track.height,
-          top: track.top,
-          ...style,
-        }),
-        [style, track.height, track.top],
-      )}
-      className={clsx(styles.track, className)}
-      {...rest}
-    >
-      {children}
-    </div>
+    <TrackProvider value={track}>
+      <div
+        style={useMemo(
+          () => ({
+            height: track.height,
+            top: track.top,
+            ...style,
+          }),
+          [style, track.height, track.top],
+        )}
+        className={clsx(styles.track, className)}
+        {...rest}
+      >
+        {children}
+      </div>
+    </TrackProvider>
   );
 });

@@ -11,6 +11,7 @@
 - [ ] Dynamic options (can change at runtime)
 - [ ] Nowline
 - [ ] Playable nowline
+- [ ] Feature flags
 - ... to be continued
 
 ## Done

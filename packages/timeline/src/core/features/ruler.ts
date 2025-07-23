@@ -29,8 +29,8 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
     };
   },
   createTimeline: (api) => {
-    const getTicks = memoize(
-      (viewport: ViewportState) => {
+    const getTicks = memoize({
+      factory: (viewport: ViewportState) => {
         const tickIntervalTime = getTickIntervalTime(viewport, 100);
         const ticksCount =
           Math.ceil(viewport.viewportDuration / tickIntervalTime) + 1;
@@ -61,14 +61,14 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
           tickIntervalTime,
         };
       },
-      (viewport) => {
+      deps: (viewport) => {
         return [
           viewport.viewportWidth,
           viewport.viewportDuration,
           viewport.chunkedPosition.offset,
         ];
       },
-    );
+    });
 
     api.eventEmitter.on("viewport:updated", (viewport) => {
       api.setState((draft) => {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 import { ItemInstance } from "../../core/types.ts";
 
@@ -7,7 +7,7 @@ export type ItemProps = React.PropsWithChildren<{
 }> &
   React.ComponentProps<"div">;
 
-export const Item = React.memo(function Item({
+export const Item = memo(function Item({
   children,
   item,
   style,
@@ -17,11 +17,11 @@ export const Item = React.memo(function Item({
   const itemStyle: React.CSSProperties = React.useMemo(() => {
     return {
       position: "absolute",
-      left: item.left,
+      left: item.leftOffset,
       width: item.width,
       ...style,
     };
-  }, [item.left, item.width, style]);
+  }, [item.leftOffset, item.width, style]);
 
   return (
     <div

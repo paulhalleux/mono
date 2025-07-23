@@ -1,9 +1,11 @@
+import isEqual from "lodash/isequal";
+
 type DependencyComparator = (prevDeps: any[], nextDeps: any[]) => boolean;
 
 function defaultCompareDeps(prevDeps: any[], nextDeps: any[]): boolean {
   if (prevDeps.length !== nextDeps.length) return false;
   for (let i = 0; i < prevDeps.length; i++) {
-    if (prevDeps[i] !== nextDeps[i]) return false;
+    if (!isEqual(prevDeps[i], nextDeps[i])) return false;
   }
   return true;
 }
@@ -21,15 +23,19 @@ interface MemoizedCache<T> {
  * @param compareDeps - Optional custom dependency comparator
  * @returns A function that accepts arguments and returns memoized value
  */
-export function memoize<T, A extends any[]>(
-  factory: (...args: A) => T,
-  depsFn: ((...args: A) => any[]) | any[],
-  compareDeps: DependencyComparator = defaultCompareDeps,
-): (...args: A) => T {
+export function memoize<T, A extends any[]>({
+  factory,
+  deps,
+  compareDeps = defaultCompareDeps,
+}: {
+  factory: (...args: A) => T;
+  deps: (...args: A) => any[];
+  compareDeps?: DependencyComparator;
+}): (...args: A) => T {
   let cache: MemoizedCache<T> | null = null;
 
   return (...args: A): T => {
-    const currentDeps = typeof depsFn === "function" ? depsFn(...args) : depsFn;
+    const currentDeps = deps(...args);
 
     if (!cache || !compareDeps(cache.deps, currentDeps)) {
       const value = factory(...args);

@@ -9,7 +9,7 @@ export declare namespace ItemSelection {
   }
 
   export interface ItemInstance {
-    isSelected(): boolean;
+    isSelected: boolean;
     select(): void;
     unselect(): void;
     toggleSelection(): void;
@@ -85,7 +85,7 @@ export const ItemSelectionFeature: TimelineFeature<
   },
   createItem(api, { id }) {
     return {
-      isSelected: () => api.isItemSelected(id),
+      isSelected: api.isItemSelected(id),
       select: () => api.selectItem(id),
       unselect: () => api.unselectItem(id),
       toggleSelection: () => api.toggleItemSelection(id),

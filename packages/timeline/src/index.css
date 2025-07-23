@@ -28,11 +28,12 @@
 }
 
 .docs-track {
+  background: #2e2e2e;
   border-bottom: 1px solid #222222;
 }
 
 .docs-track-header {
-  background: #2c2c2c;
+  background: #353535;
   border-right: 1px solid #222222;
   display: flex;
   align-items: center;
@@ -91,7 +92,7 @@
 }
 
 .docs-ruler-header {
-  background: #2c2c2c;
+  background: #353535;
   border-right: 1px solid #222222;
   display: flex;
   align-items: center;
@@ -109,18 +110,14 @@
   color: #9f9f9f;
 }
 
-.docs-subticks {
+.docs-subtick {
   position: absolute;
   bottom: 0;
-  left: calc(10% - 1px);
-  right: 1px;
   height: 10px;
-  overflow: hidden;
-  background: repeating-linear-gradient(
-    to right,
-    #575757,
-    #575757 1px,
-    transparent 1px,
-    transparent 10%
-  );
+  width: 1px;
+  background: #6a6a6a;
+
+  &:nth-child(5n) {
+    height: 15px;
+  }
 }

@@ -1,12 +1,23 @@
 import React, { memo, useMemo } from "react";
 import { clsx } from "clsx";
 
+import { ItemInstance, TimelineState } from "../../core/types.ts";
 import { useTimelineStore } from "../adapter.ts";
+
+import { TrackProvider } from "./Track.tsx";
 
 import styles from "./TrackView.module.css";
 
-export type TrackViewProps = React.PropsWithChildren &
-  React.ComponentPropsWithoutRef<"div">;
+export type TrackViewProps = {
+  children: (item: ItemInstance) => React.ReactNode;
+} & Omit<React.ComponentPropsWithoutRef<"div">, "children">;
+
+const viewportWidthSelector = (state: TimelineState) =>
+  state.viewportState.viewportWidth;
+const timelineWidthSelector = (state: TimelineState) =>
+  state.viewportState.timelineWidth;
+const timePositionOffsetPxSelector = (state: TimelineState) =>
+  state.viewportState.timePositionOffsetPx;
 
 export const TrackView = memo(function TrackView({
   children,
@@ -14,17 +25,12 @@ export const TrackView = memo(function TrackView({
   className,
   ...rest
 }: TrackViewProps) {
-  const viewportWidth = useTimelineStore(
-    (state) => state.viewportState.viewportWidth,
-  );
+  const viewportWidth = useTimelineStore(viewportWidthSelector);
+  const timelineWidth = useTimelineStore(timelineWidthSelector);
+  const timePositionOffsetPx = useTimelineStore(timePositionOffsetPxSelector);
 
-  const timelineWidth = useTimelineStore(
-    (state) => state.viewportState.timelineWidth,
-  );
-
-  const timePositionOffsetPx = useTimelineStore(
-    (state) => state.viewportState.timePositionOffsetPx,
-  );
+  const track = React.use(TrackProvider);
+  const items = useTimelineStore(() => track?.getItems() || []);
 
   return (
     <div
@@ -48,7 +54,9 @@ export const TrackView = memo(function TrackView({
         )}
         className={styles["translate-container"]}
       >
-        {children}
+        {items.map((item) => (
+          <React.Fragment key={item.id}>{children(item)}</React.Fragment>
+        ))}
       </div>
     </div>
   );

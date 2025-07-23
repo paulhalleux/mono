@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 
 import { createTimeline } from "../core/timeline.ts";
@@ -6,7 +6,6 @@ import { TimelineApi, TimelineOptions, TimelineState } from "../core/types.ts";
 
 export const useTimeline = (options: TimelineOptions) => {
   const [timeline] = React.useState(() => createTimeline(options));
-  const [, update] = useState(0);
 
   const timelineRef = React.useCallback(
     (instance: HTMLElement | null) => {
@@ -19,8 +18,6 @@ export const useTimeline = (options: TimelineOptions) => {
     },
     [timeline],
   );
-
-  timeline.store.subscribe(() => update((v) => v + 1));
 
   return { timeline, timelineRef };
 };

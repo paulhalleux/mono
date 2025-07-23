@@ -1,3 +1,4 @@
 .viewport {
+  position: relative;
   overflow: auto;
 }

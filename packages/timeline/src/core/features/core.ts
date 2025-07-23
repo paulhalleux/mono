@@ -6,6 +6,7 @@ import {
   TrackInstance as TimelineTrackInstance,
 } from "../types";
 import { memoize } from "../utils/memoize.ts";
+import { memoizeArrayItems } from "../utils/memoize-array.ts";
 import { timeToWidth } from "../utils/scale.ts";
 import { binarySearchIndex } from "../utils/search.ts";
 
@@ -46,7 +47,7 @@ export declare namespace Core {
   }
 
   export interface ItemInstance {
-    left: number;
+    leftOffset: number;
     width: number;
     duration: number;
   }
@@ -79,7 +80,9 @@ export declare namespace Core {
 export const CoreTimelineFeature: TimelineFeature<
   Core.Api,
   Core.Options,
-  Core.State
+  Core.State,
+  Core.TrackInstance,
+  Core.ItemInstance
 > = {
   getInitialState(options) {
     return {
@@ -256,14 +259,17 @@ export const CoreTimelineFeature: TimelineFeature<
       return timeToWidth(duration, viewportWidth, viewportDuration);
     };
 
-    const getTracksMemo = memoize(() => {
-      let prev: TimelineTrackInstance;
-      return (options.tracks ?? []).map((def) => {
-        const instance = api._internal.createTrack(def, prev);
-        prev = instance;
-        return instance;
-      });
-    }, [options.tracks]);
+    const getTracksMemo = memoize({
+      deps: () => [options.tracks],
+      factory: () => {
+        let prev: TimelineTrackInstance;
+        return (options.tracks ?? []).map((def) => {
+          const instance = api._internal.createTrack(def, prev);
+          prev = instance;
+          return instance;
+        });
+      },
+    });
 
     const getTracks = () => {
       const {
@@ -315,7 +321,7 @@ export const CoreTimelineFeature: TimelineFeature<
 
       element.addEventListener("scroll", handler, { signal: options.signal });
       if (options.initialRun) {
-        handler();
+        setTimeout(handler, 0);
       }
     };
 
@@ -332,35 +338,43 @@ export const CoreTimelineFeature: TimelineFeature<
   },
   createItem(api, itemDef) {
     return {
-      left: api.getItemOffsetPx(itemDef.start),
+      leftOffset: api.getItemOffsetPx(itemDef.start),
       width: api.getItemWidthPx(itemDef.end - itemDef.start),
       duration: itemDef.end - itemDef.start,
     };
   },
   createTrack(api, { id }, previousTrack) {
-    const getItems = memoize(
-      (trackId: string) => {
-        const itemDefs = api.store.getState().itemsByTrack[trackId] || [];
-        return itemDefs.map(api._internal.createItem);
-      },
-      (trackId) => {
-        const { itemsByTrack, viewportState } = api.store.getState();
+    const getItems = memoizeArrayItems({
+      deps: (index, [trackId]: [trackId: string]) => {
+        const { itemsByTrack, viewportState, selectedItems } =
+          api.store.getState();
+        const item = itemsByTrack[trackId][index];
         return [
-          itemsByTrack[trackId],
-          viewportState.viewportDuration,
+          item,
+          selectedItems.has(item.id),
           viewportState.viewportWidth,
+          viewportState.viewportDuration,
         ];
       },
-    );
+      itemFactory: (index, [trackId]) => {
+        const item = api.store.getState().itemsByTrack[trackId][index];
+        return api._internal.createItem(item);
+      },
+      itemCountFn: (trackId) => {
+        const items = api.store.getState().itemsByTrack[trackId];
+        return items ? items.length : 0;
+      },
+    });
 
     return {
       top: (previousTrack?.top ?? 0) + (previousTrack?.height ?? 0),
-      getItems: () =>
-        virtualizeItems(
+      getItems: () => {
+        return virtualizeItems(
           getItems(id),
           api.getTimePosition(),
           api.store.getState().viewportState.viewportDuration,
-        ),
+        );
+      },
     };
   },
 };

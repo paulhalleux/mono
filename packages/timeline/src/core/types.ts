@@ -6,6 +6,7 @@ import type { Store, StoreBuilder, StoreUpdater } from "../types/store.ts";
 import type { Core } from "./features/core.ts";
 import { ItemSelection } from "./features/item-selection.ts";
 import { Ruler } from "./features/ruler.ts";
+import { ZoneSelection } from "./features/zone-selection.ts";
 
 /**
  * Track definition.
@@ -58,7 +59,8 @@ export interface TimelineOptions
   extends InternalTimelineOptions,
     Core.Options,
     ItemSelection.Options,
-    Ruler.Options {}
+    Ruler.Options,
+    ZoneSelection.Options {}
 
 /**
  * Timeline module state.
@@ -67,7 +69,8 @@ export interface TimelineOptions
 export interface TimelineState
   extends Core.State,
     ItemSelection.State,
-    Ruler.State {}
+    Ruler.State,
+    ZoneSelection.State {}
 
 /**
  * Timeline events.
@@ -125,4 +128,16 @@ export type TimelineFeature<
     prev: TrackInstance | undefined,
   ): TrackApi;
   createItem?(api: InternalTimelineApi & Api, itemDef: ItemDef): ItemApi;
+};
+
+export type XYPosition = {
+  x: number;
+  y: number;
+};
+
+export type DrawRect = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
 };

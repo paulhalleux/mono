@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { clsx } from "clsx";
 
+import { TimelineApi } from "../../core/types.ts";
 import { useTimelineStore } from "../adapter.ts";
 
 import styles from "./RulerHeader.module.css";
@@ -8,15 +9,16 @@ import styles from "./RulerHeader.module.css";
 export type RulerHeaderProps = React.PropsWithChildren &
   React.ComponentProps<"div">;
 
+const trackHeaderWidthSelector = (_: any, api: TimelineApi) =>
+  api.options.trackHeaderWidth;
+
 export function RulerHeader({
   children,
   style,
   className,
   ...rest
 }: RulerHeaderProps) {
-  const trackHeaderWidth = useTimelineStore(
-    (_, api) => api.options.trackHeaderWidth,
-  );
+  const trackHeaderWidth = useTimelineStore(trackHeaderWidthSelector);
 
   return (
     <div
