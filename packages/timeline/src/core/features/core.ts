@@ -263,7 +263,11 @@ export const CoreTimelineFeature: TimelineFeature<
     const getTracksMemo = memoizeArrayItems<TimelineTrackInstance, []>({
       deps: (index) => {
         const { tracks = [] } = api.options;
-        return [tracks[index]];
+        const trackDef = tracks[index];
+        if (!trackDef) {
+          return [];
+        }
+        return api._internal.getTrackDependencies(trackDef, index);
       },
       itemCountFn: () => options.tracks?.length ?? 0,
       itemFactory: (index, prev) => {
@@ -351,19 +355,17 @@ export const CoreTimelineFeature: TimelineFeature<
       },
     };
   },
+  itemRecomputeDependencies(api, item) {
+    const { viewportState } = api.store.getState();
+    return [item, viewportState.viewportWidth, viewportState.viewportDuration];
+  },
   createTrack(api, { id }, previousTrack) {
     const getItems = memoizeArrayItems<TimelineItemInstance, [trackId: string]>(
       {
         deps: (index, [trackId]: [trackId: string]) => {
-          const { itemsByTrack, viewportState, selectedItems } =
-            api.store.getState();
-          const item = itemsByTrack[trackId][index];
-          return [
-            item,
-            selectedItems.has(item.id),
-            viewportState.viewportWidth,
-            viewportState.viewportDuration,
-          ];
+          const { itemsByTrack } = api.store.getState();
+          const itemDef = itemsByTrack[trackId][index];
+          return api._internal.getItemDependencies(itemDef, index);
         },
         itemFactory: (index, _, [trackId]) => {
           const item = api.store.getState().itemsByTrack[trackId][index];
@@ -389,6 +391,9 @@ export const CoreTimelineFeature: TimelineFeature<
         );
       },
     };
+  },
+  trackRecomputeDependencies(_, track) {
+    return [track];
   },
 };
 

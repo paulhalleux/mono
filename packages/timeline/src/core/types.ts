@@ -89,14 +89,14 @@ export type InternalTimelineApi = {
   abortSignal: AbortSignal;
   eventEmitter: StrictEventEmitter<EventEmitter, TimelineEvents>;
   destroy: () => void;
-
-  // strictly internal methods
   _internal: {
     createTrack: (
       trackDef: TrackDef,
       previousTrack: TrackInstance | undefined,
     ) => TrackInstance;
     createItem: (itemDef: ItemDef) => ItemInstance;
+    getItemDependencies: (item: ItemDef, index: number) => any[];
+    getTrackDependencies: (track: TrackDef, index: number) => any[];
   };
 };
 
@@ -128,6 +128,16 @@ export type TimelineFeature<
     prev: TrackInstance | undefined,
   ): TrackApi;
   createItem?(api: InternalTimelineApi & Api, itemDef: ItemDef): ItemApi;
+  itemRecomputeDependencies?(
+    api: InternalTimelineApi & Api,
+    item: ItemDef,
+    index: number,
+  ): any[];
+  trackRecomputeDependencies?(
+    api: InternalTimelineApi & Api,
+    track: TrackDef,
+    index: number,
+  ): any[];
 };
 
 export type XYPosition = {

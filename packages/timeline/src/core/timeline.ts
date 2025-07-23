@@ -63,6 +63,16 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     }, trackDef as TrackInstance);
   };
 
+  const getTrackDependencies = (track: TrackDef, index: number): any[] => {
+    const tlApi = { ...api, ...internalApi };
+    return features.reduce((deps, feature) => {
+      return [
+        ...deps,
+        ...(feature.trackRecomputeDependencies?.(tlApi, track, index) ?? []),
+      ];
+    }, [] as any[]);
+  };
+
   const createItem = (itemDef: ItemDef): ItemInstance => {
     const tlApi = { ...api, ...internalApi };
     return features.reduce((previousValue, currentValue) => {
@@ -71,6 +81,16 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
         ...(currentValue.createItem?.(tlApi, itemDef) ?? previousValue),
       };
     }, itemDef as ItemInstance);
+  };
+
+  const getItemDependencies = (item: ItemDef, index: number): any[] => {
+    const tlApi = { ...api, ...internalApi };
+    return features.reduce((deps, feature) => {
+      return [
+        ...deps,
+        ...(feature.itemRecomputeDependencies?.(tlApi, item, index) ?? []),
+      ];
+    }, [] as any[]);
   };
 
   const internalApi: InternalTimelineApi = {
@@ -86,6 +106,8 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     _internal: {
       createTrack,
       createItem,
+      getItemDependencies,
+      getTrackDependencies,
     },
   };
 

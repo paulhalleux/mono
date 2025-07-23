@@ -91,4 +91,7 @@ export const ItemSelectionFeature: TimelineFeature<
       toggleSelection: () => api.toggleItemSelection(id),
     };
   },
+  itemRecomputeDependencies(api, item) {
+    return [api.isItemSelected(item.id)];
+  },
 };
