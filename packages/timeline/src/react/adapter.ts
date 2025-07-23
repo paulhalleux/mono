@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { useShallow } from "zustand/react/shallow";
 
 import { createTimeline } from "../core/timeline.ts";
@@ -11,9 +11,8 @@ export const useTimeline = (options: TimelineOptions) => {
     (instance: HTMLElement | null) => {
       if (instance) {
         timeline.mount(instance);
-        return () => {
-          timeline.unmount();
-        };
+      } else {
+        timeline.unmount();
       }
     },
     [timeline],
@@ -34,7 +33,10 @@ export const useTimelineStore = <T>(
 
   return timeline.store(
     useShallow(
-      useCallback((state) => selector(state, timeline), [selector, timeline]),
+      React.useCallback(
+        (state) => selector(state, timeline),
+        [selector, timeline],
+      ),
     ),
   );
 };

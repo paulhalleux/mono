@@ -65,7 +65,7 @@ export function RulerTicks({
       <div
         style={useMemo(
           () => ({
-            transform: `translateX(${-timePositionOffsetPx}px)`,
+            transform: `translateX(${timePositionOffsetPx}px)`,
             width: timelineWidth,
             height: "100%",
           }),

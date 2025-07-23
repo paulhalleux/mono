@@ -51,7 +51,7 @@ export const TrackView = memo(function TrackView({
       <div
         style={useMemo(
           () => ({
-            transform: `translateX(${-timePositionOffsetPx}px)`,
+            transform: `translateX(${timePositionOffsetPx}px)`,
             width: timelineWidth,
           }),
           [timePositionOffsetPx, timelineWidth],

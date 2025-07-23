@@ -88,15 +88,23 @@ export type InternalTimelineApi = {
   setState: StoreUpdater<TimelineState>;
   abortSignal: AbortSignal;
   eventEmitter: StrictEventEmitter<EventEmitter, TimelineEvents>;
-  destroy: () => void;
+  destroy(): void;
+  getVisibleTracks(): TrackInstance[];
+  getTracks(): TrackInstance[];
   _internal: {
-    createTrack: (
+    createTrack(
       trackDef: TrackDef,
       previousTrack: TrackInstance | undefined,
-    ) => TrackInstance;
-    createItem: (itemDef: ItemDef) => ItemInstance;
-    getItemDependencies: (item: ItemDef, index: number) => any[];
-    getTrackDependencies: (track: TrackDef, index: number) => any[];
+    ): TrackInstance;
+    createItem(itemDef: ItemDef): ItemInstance;
+    getItemDependencies(item: ItemDef, index: number): any[];
+    getTrackDependencies(track: TrackDef, index: number): any[];
+    getTrackAtHeight(height: number): TrackInstance | undefined;
+    getTracksInRange(topHeight: number, bottomHeight: number): TrackInstance[];
+    widthToTime(width: number): number;
+    timeToWidth(time: number): number;
+    timeToLeft(time: number): number;
+    screenToTime(x: number): number;
   };
 };
 

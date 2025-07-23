@@ -1,11 +1,12 @@
 # @paulhalleux/timeline
 
 ![img.png](img.png)
+![img_1.png](img_1.png)
 
 ## Todo
 - [ ] Zone selection
   - [x] Show zone selection
-  - [ ] Select items
+  - [x] Select items
   - [ ] Scroll
 - [ ] Keyboard selection
 - [ ] Resizable track header
@@ -20,6 +21,7 @@
 - [ ] Define re-compute dependency in features
 - [ ] Track grouping
 - [ ] Sub-tracks w/ expanded/collapsed
+- [ ] Handle abort in mount/unmount
 - ... to be continued
 
 ## Done

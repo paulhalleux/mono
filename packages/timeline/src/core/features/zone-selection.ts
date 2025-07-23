@@ -44,8 +44,8 @@ export const ZoneSelectionFeature: TimelineFeature<
       element.ownerDocument.body.style.userSelect = "none";
       const rect = element.getBoundingClientRect();
       const origin: XYPosition = {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
+        x: event.clientX - rect.left - (api.options.trackHeaderWidth ?? 0),
+        y: event.clientY - rect.top - (api.options.rulerHeight ?? 0),
       };
 
       api.setState((draft) => {
@@ -69,8 +69,8 @@ export const ZoneSelectionFeature: TimelineFeature<
 
       const rect = element.getBoundingClientRect();
       const end: XYPosition = {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
+        x: event.clientX - rect.left - (api.options.trackHeaderWidth ?? 0),
+        y: event.clientY - rect.top - (api.options.rulerHeight ?? 0),
       };
 
       const startX = Math.min(origin.x, end.x);
@@ -78,11 +78,34 @@ export const ZoneSelectionFeature: TimelineFeature<
       const width = Math.abs(end.x - origin.x);
       const height = Math.abs(end.y - origin.y);
 
+      const selectedTracksIds = api._internal
+        .getTracksInRange(
+          element.scrollTop + startY,
+          element.scrollTop + startY + height,
+        )
+        .map((track) => track.id);
+
+      const startTime = api._internal.screenToTime(startX);
+      const endTime = api._internal.screenToTime(startX + width);
+
+      const items = api.options.items?.filter((item) => {
+        return (
+          selectedTracksIds.includes(item.trackId) &&
+          item.start < endTime &&
+          item.end > startTime
+        );
+      });
+
       api.setState((draft) => {
+        draft.selectedItems.clear();
+        items?.forEach((item) => {
+          draft.selectedItems.add(item.id);
+        });
+
         draft.zoneSelection.end = end;
         draft.zoneSelection.drawRect = {
-          top: startY - (api.options.rulerHeight ?? 0),
-          left: startX - (api.options.trackHeaderWidth ?? 0),
+          top: startY,
+          left: startX,
           width,
           height,
         };

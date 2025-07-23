@@ -1,11 +1,10 @@
 import { TimelineFeature } from "../types";
 import { memoize } from "../utils/memoize.ts";
 import { getTickIntervalTime } from "../utils/ruler.ts";
-import { timeToWidth } from "../utils/scale.ts";
 
 import { ViewportState } from "./core.ts";
 
-const DEFAULT_MIN_TICK_INTERVAL_WIDTH = 240;
+const DEFAULT_MIN_TICK_INTERVAL_WIDTH = 160;
 
 export declare namespace Ruler {
   export interface Options {
@@ -49,11 +48,7 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
           viewport.chunkedPosition.offset / tickIntervalTime,
         );
 
-        const tickWidth = timeToWidth(
-          tickIntervalTime,
-          viewport.viewportWidth,
-          viewport.viewportDuration,
-        );
+        const tickWidth = api._internal.timeToWidth(tickIntervalTime);
 
         return {
           ticks: Array.from({ length: ticksCount }, (_, i) => {
@@ -61,11 +56,7 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
             return {
               time: time,
               width: tickWidth,
-              left: timeToWidth(
-                time,
-                viewport.viewportWidth,
-                viewport.viewportDuration,
-              ),
+              left: api._internal.timeToLeft(time),
             };
           }),
           tickIntervalTime,

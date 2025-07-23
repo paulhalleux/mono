@@ -3,16 +3,14 @@ import {
   ItemInstance as TimelineItemInstance,
   TimelineFeature,
   TrackDef,
-  TrackInstance as TimelineTrackInstance,
 } from "../types";
 import { memoizeArrayItems } from "../utils/memoize-array.ts";
-import { timeToWidth } from "../utils/scale.ts";
 import { binarySearchIndex } from "../utils/search.ts";
 
 const DEFAULT_TRACK_HEADER_WIDTH = 0;
 const DEFAULT_MIN_VISIBLE_DURATION = 1000 * 10; // 10 seconds
 const DEFAULT_MAX_VISIBLE_DURATION = 1000 * 60 * 10; // 10 minutes
-const DEFAULT_CHUNK_SIZE = 640; // 640x viewport width
+export const DEFAULT_CHUNK_SIZE = 640; // 640x viewport width
 
 type ChunkedPosition = {
   index: number; // Index of the chunk
@@ -40,9 +38,6 @@ export declare namespace Core {
     setZoomLevel(zoomLevel: number): void;
     setTimePosition(position: number): void;
     getTimePosition(): number;
-    getItemOffsetPx(timePosition: number): number;
-    getItemWidthPx(duration: number): number;
-    getTracks(): TimelineTrackInstance[];
   }
 
   export interface ItemInstance {
@@ -225,7 +220,7 @@ export const CoreTimelineFeature: TimelineFeature<
       const { viewportDuration, chunkedPosition } = viewportState;
 
       const chunkDuration = viewportDuration * DEFAULT_CHUNK_SIZE;
-      const timePositionOffsetPx = getItemOffsetPx(
+      const timePositionOffsetPx = -api._internal.timeToLeft(
         chunkedPosition.index * chunkDuration + chunkedPosition.offset,
       );
 
@@ -236,59 +231,6 @@ export const CoreTimelineFeature: TimelineFeature<
       api.eventEmitter.emit("viewport:updated", viewportState);
     };
 
-    /**
-     * Gets the pixel offset for a given time position.
-     * @param timePosition The time position in milliseconds.
-     * @returns The pixel offset for the given time position.
-     */
-    const getItemOffsetPx = (timePosition: number): number => {
-      const { viewportWidth, viewportDuration } =
-        api.store.getState().viewportState;
-
-      const msInPx = viewportWidth / viewportDuration;
-      return timePosition * msInPx;
-    };
-
-    /**
-     * Gets the pixel width for a given duration.
-     * @param duration The duration in milliseconds.
-     * @returns The pixel width for the given duration.
-     */
-    const getItemWidthPx = (duration: number): number => {
-      const { viewportState } = api.store.getState();
-      const { viewportWidth, viewportDuration } = viewportState;
-      return timeToWidth(duration, viewportWidth, viewportDuration);
-    };
-
-    const getTracksMemo = memoizeArrayItems<TimelineTrackInstance, []>({
-      deps: (index) => {
-        const { tracks = [] } = api.options;
-        const trackDef = tracks[index];
-        if (!trackDef) {
-          return [];
-        }
-        return api._internal.getTrackDependencies(trackDef, index);
-      },
-      itemCountFn: () => options.tracks?.length ?? 0,
-      itemFactory: (index, prev) => {
-        const trackDef = options.tracks?.[index];
-        if (!trackDef) {
-          throw new Error(`Track definition at index ${index} is undefined`);
-        }
-        return api._internal.createTrack(trackDef, prev);
-      },
-    });
-
-    const getTracks = () => {
-      const {
-        viewportState: { virtualizedTracks },
-      } = api.store.getState();
-      return getTracksMemo().slice(
-        virtualizedTracks.startIndex,
-        virtualizedTracks.endIndex + 1,
-      );
-    };
-
     const registerScrollListener = (
       element: HTMLElement,
       options: {
@@ -297,7 +239,7 @@ export const CoreTimelineFeature: TimelineFeature<
       },
     ) => {
       const handler = () => {
-        const tracks = getTracksMemo();
+        const tracks = api.getTracks();
 
         const startIndex = Math.max(
           0,
@@ -339,15 +281,12 @@ export const CoreTimelineFeature: TimelineFeature<
       setZoomLevel,
       setTimePosition,
       getTimePosition,
-      getItemOffsetPx,
-      getItemWidthPx,
-      getTracks,
     };
   },
   createItem(api, itemDef) {
     return {
-      leftOffset: api.getItemOffsetPx(itemDef.start),
-      width: api.getItemWidthPx(itemDef.end - itemDef.start),
+      leftOffset: api._internal.timeToLeft(itemDef.start),
+      width: api._internal.timeToWidth(itemDef.end - itemDef.start),
       duration: itemDef.end - itemDef.start,
       attributes: {
         "data-item-id": itemDef.id,

@@ -25,6 +25,7 @@
   background: #2e2e2e;
   height: 50%;
   border-radius: 5px;
+  overflow: hidden;
 }
 
 .docs-track {

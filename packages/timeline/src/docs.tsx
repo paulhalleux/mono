@@ -46,7 +46,9 @@ export function Docs() {
     rulerHeight,
   });
 
-  const trackInstances = timeline.store(useShallow(() => timeline.getTracks()));
+  const trackInstances = timeline.store(
+    useShallow(() => timeline.getVisibleTracks()),
+  );
 
   const renderTrackItem = useCallback(
     (item: ItemInstance, track: TrackInstance) => (
