@@ -8,6 +8,7 @@
   - [x] Show zone selection
   - [x] Select items
   - [ ] Scroll
+  - [ ] Position relation to scroll container, should grow with scroll
 - [ ] Keyboard selection
 - [ ] Resizable track header
 - [ ] Dynamic tracks

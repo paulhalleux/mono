@@ -45,7 +45,11 @@ export const ZoneSelectionFeature: TimelineFeature<
       const rect = element.getBoundingClientRect();
       const origin: XYPosition = {
         x: event.clientX - rect.left - (api.options.trackHeaderWidth ?? 0),
-        y: event.clientY - rect.top - (api.options.rulerHeight ?? 0),
+        y:
+          event.clientY -
+          rect.top -
+          (api.options.rulerHeight ?? 0) +
+          element.scrollTop,
       };
 
       api.setState((draft) => {
@@ -63,54 +67,64 @@ export const ZoneSelectionFeature: TimelineFeature<
       });
     };
 
-    const onMouseMove = throttle((event: MouseEvent, element: HTMLElement) => {
-      const { active, origin } = api.store.getState().zoneSelection;
-      if (!active || !origin) return;
+    let lastClient: XYPosition = { x: 0, y: 0 };
+    const onMouseMove = throttle(
+      (mousePos: XYPosition, element: HTMLElement) => {
+        const { active, origin } = api.store.getState().zoneSelection;
+        if (!active || !origin) return;
 
-      const rect = element.getBoundingClientRect();
-      const end: XYPosition = {
-        x: event.clientX - rect.left - (api.options.trackHeaderWidth ?? 0),
-        y: event.clientY - rect.top - (api.options.rulerHeight ?? 0),
-      };
+        lastClient = mousePos;
 
-      const startX = Math.min(origin.x, end.x);
-      const startY = Math.min(origin.y, end.y);
-      const width = Math.abs(end.x - origin.x);
-      const height = Math.abs(end.y - origin.y);
+        const rect = element.getBoundingClientRect();
+        const end: XYPosition = {
+          x: mousePos.x - rect.left - (api.options.trackHeaderWidth ?? 0),
+          y:
+            mousePos.y -
+            rect.top -
+            (api.options.rulerHeight ?? 0) +
+            element.scrollTop,
+        };
 
-      const selectedTracksIds = api._internal
-        .getTracksInRange(
-          element.scrollTop + startY,
-          element.scrollTop + startY + height,
-        )
-        .map((track) => track.id);
+        const startX = Math.min(origin.x, end.x);
+        const startY = Math.min(origin.y, end.y) - element.scrollTop;
+        const width = Math.abs(end.x - origin.x);
+        const height = Math.abs(end.y - origin.y);
 
-      const startTime = api._internal.screenToTime(startX);
-      const endTime = api._internal.screenToTime(startX + width);
+        const selectedTracksIds = api._internal
+          .getTracksInRange(
+            element.scrollTop + startY,
+            element.scrollTop + startY + height,
+          )
+          .map((track) => track.id);
 
-      const items = api.options.items?.filter((item) => {
-        return (
-          selectedTracksIds.includes(item.trackId) &&
-          item.start < endTime &&
-          item.end > startTime
-        );
-      });
+        const startTime = api._internal.screenToTime(startX);
+        const endTime = api._internal.screenToTime(startX + width);
 
-      api.setState((draft) => {
-        draft.selectedItems.clear();
-        items?.forEach((item) => {
-          draft.selectedItems.add(item.id);
+        const items = api.options.items?.filter((item) => {
+          return (
+            selectedTracksIds.includes(item.trackId) &&
+            item.start < endTime &&
+            item.end > startTime
+          );
         });
 
-        draft.zoneSelection.end = end;
-        draft.zoneSelection.drawRect = {
-          top: startY,
-          left: startX,
-          width,
-          height,
-        };
-      });
-    }, 1000 / 60);
+        api.setState((draft) => {
+          draft.selectedItems.clear();
+          items?.forEach((item) => {
+            draft.selectedItems.add(item.id);
+          });
+
+          draft.zoneSelection.end = end;
+          draft.zoneSelection.drawRect = {
+            top: startY,
+            left: startX,
+            width,
+            height,
+          };
+        });
+      },
+      1000 / 60,
+    );
 
     const onMouseUp = (event: MouseEvent, element: HTMLElement) => {
       if (event.button !== 0) return;
@@ -134,21 +148,30 @@ export const ZoneSelectionFeature: TimelineFeature<
         },
       );
 
-      element.ownerDocument.addEventListener(
+      element.addEventListener("scroll", () => {
+        if (api.store.getState().zoneSelection.active) {
+          onMouseMove(lastClient, element);
+        }
+      });
+
+      window.addEventListener(
         "mousemove",
-        (event) => onMouseMove(event, element),
+        (event) =>
+          onMouseMove(
+            {
+              x: event.clientX,
+              y: event.clientY,
+            },
+            element,
+          ),
         {
           signal: api.abortSignal,
         },
       );
 
-      element.ownerDocument.addEventListener(
-        "mouseup",
-        (event) => onMouseUp(event, element),
-        {
-          signal: api.abortSignal,
-        },
-      );
+      window.addEventListener("mouseup", (event) => onMouseUp(event, element), {
+        signal: api.abortSignal,
+      });
     };
 
     api.eventEmitter.on("element:mounted", ({ element }) => {
