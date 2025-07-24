@@ -11,6 +11,7 @@
     - [x] Vertical scroll
     - [ ] Horizontal scroll
   - [x] Position relation to scroll container, should grow with scroll
+- [ ] Horizontal scroll with mouse wheel
 - [ ] Keyboard selection
 - [ ] Zoom origin position
 - [ ] Resizable track header
@@ -25,7 +26,7 @@
 - [ ] Define re-compute dependency in features
 - [ ] Track grouping
 - [ ] Sub-tracks w/ expanded/collapsed
-- [ ] Handle abort in mount/unmount
+- [ ] Create item instance on demand
 - ... to be continued
 
 ## Done
@@ -42,3 +43,4 @@
 - [x] Ruler
   - [x] Sub-ticks
 - [x] Timeline overlay
+- [x] Handle abort in mount/unmount

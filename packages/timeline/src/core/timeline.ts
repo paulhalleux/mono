@@ -38,7 +38,6 @@ const BUILT_IN_FEATURES = [
 export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   const features = BUILT_IN_FEATURES;
 
-  const abortController = new AbortController();
   const eventEmitter: StrictEventEmitter<EventEmitter, TimelineEvents> =
     new EventEmitter();
 
@@ -55,15 +54,22 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     : createDefaultStore(initialState);
   const setState = createStoreUpdater(store);
 
+  let abortController: AbortController = new AbortController();
+
   /**
    * Mounts the viewport to a given HTML element.
    * @param element The HTML element to mount the viewport to.
    */
   const mount = (element: HTMLElement) => {
+    abortController = new AbortController();
     api.setState((draft) => {
       draft.element = castDraft(element);
     });
-    api.eventEmitter.emit("element:mounted", { element });
+
+    api.eventEmitter.emit("element:mounted", {
+      element,
+      abortSignal: abortController.signal,
+    });
   };
 
   /**
@@ -75,6 +81,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
       draft.element = null;
     });
     api.eventEmitter.emit("element:unmounted");
+    abortController.abort();
   };
 
   /**
@@ -269,13 +276,6 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     options,
     setState,
     eventEmitter,
-    abortSignal: abortController.signal,
-    destroy: () => {
-      eventEmitter.removeAllListeners();
-      abortController.abort();
-    },
-    mount,
-    unmount,
     _internal: {
       createTrack,
       createItem,
@@ -288,6 +288,8 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
       timeToLeft,
       screenToTime,
     },
+    mount,
+    unmount,
     getTracks,
     getVisibleTracks,
   };

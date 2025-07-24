@@ -120,10 +120,10 @@ export const CoreTimelineFeature: TimelineFeature<
       }
     });
 
-    api.eventEmitter.on("element:mounted", ({ element }) => {
+    api.eventEmitter.on("element:mounted", ({ element, abortSignal }) => {
       resizeObserver.observe(element);
       registerScrollListener(element, {
-        signal: api.abortSignal,
+        signal: abortSignal,
         initialRun: true,
       });
     });

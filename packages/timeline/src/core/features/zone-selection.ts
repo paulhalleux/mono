@@ -136,8 +136,7 @@ export const ZoneSelectionFeature: TimelineFeature<
       1000 / 60,
     );
 
-    const onMouseUp = (event: MouseEvent, element: HTMLElement) => {
-      if (event.button !== 0) return;
+    const onMouseUp = (element: HTMLElement) => {
       api.stopAutoScroll();
 
       element.ownerDocument.body.style.userSelect = "";
@@ -150,13 +149,14 @@ export const ZoneSelectionFeature: TimelineFeature<
       });
     };
 
-    const registerEventListeners = (element: HTMLElement) => {
+    const registerEventListeners = (
+      element: HTMLElement,
+      signal: AbortSignal,
+    ) => {
       element.addEventListener(
         "mousedown",
         (event) => onMouseDown(event, element),
-        {
-          signal: api.abortSignal,
-        },
+        { signal },
       );
 
       element.addEventListener("scroll", () => {
@@ -175,18 +175,33 @@ export const ZoneSelectionFeature: TimelineFeature<
             },
             element,
           ),
+        { signal },
+      );
+
+      window.addEventListener(
+        "mouseup",
+        (event) => {
+          if (event.button !== 0) return;
+          onMouseUp(element);
+        },
         {
-          signal: api.abortSignal,
+          signal,
         },
       );
 
-      window.addEventListener("mouseup", (event) => onMouseUp(event, element), {
-        signal: api.abortSignal,
-      });
+      window.addEventListener(
+        "keydown",
+        (event) => {
+          if (event.key === "Escape") {
+            onMouseUp(element);
+          }
+        },
+        { signal },
+      );
     };
 
-    api.eventEmitter.on("element:mounted", ({ element }) => {
-      registerEventListeners(element);
+    api.eventEmitter.on("element:mounted", ({ element, abortSignal }) => {
+      registerEventListeners(element, abortSignal);
     });
 
     return {};

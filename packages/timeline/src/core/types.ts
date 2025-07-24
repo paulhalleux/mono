@@ -82,7 +82,7 @@ export interface TimelineState
  * This interface defines the events that the Timeline module can emit.
  */
 export interface TimelineEvents extends Core.Events, ItemSelection.Events {
-  "element:mounted": { element: HTMLElement };
+  "element:mounted": { element: HTMLElement; abortSignal: AbortSignal };
   "element:unmounted": void;
 }
 
@@ -94,11 +94,9 @@ export type InternalTimelineApi = {
   options: TimelineOptions;
   store: Store<TimelineState>;
   setState: StoreUpdater<TimelineState>;
-  abortSignal: AbortSignal;
   eventEmitter: StrictEventEmitter<EventEmitter, TimelineEvents>;
   mount(element: HTMLElement): void;
   unmount(): void;
-  destroy(): void;
   getVisibleTracks(): TrackInstance[];
   getTracks(): TrackInstance[];
   _internal: {
