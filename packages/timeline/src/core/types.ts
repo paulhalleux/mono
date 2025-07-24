@@ -165,6 +165,7 @@ export type TimelineFeature<
     element: HTMLElement,
     abortSignal: AbortSignal,
   ): void;
+  onUnmount?(api: TimelineApi): void;
 };
 
 export type XYPosition = {

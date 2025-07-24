@@ -88,6 +88,10 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     });
     api.eventEmitter.emit("element:unmounted");
     abortController.abort();
+
+    features.forEach((feature) => {
+      feature.onUnmount?.(api);
+    });
   };
 
   /**

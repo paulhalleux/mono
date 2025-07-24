@@ -317,6 +317,30 @@ export const CoreTimelineFeature: TimelineFeature<
   trackRecomputeDependencies(_, track) {
     return [track];
   },
+  onMount(api, element, abortSignal) {
+    element.addEventListener(
+      "wheel",
+      (event) => {
+        if (!(event.deltaY && event.ctrlKey) || event.shiftKey) {
+          return;
+        }
+
+        event.preventDefault();
+
+        const { viewportState } = api.store.getState();
+        const zoomChange = event.deltaY > 0 ? -0.05 : 0.05;
+        const newZoomLevel = Math.max(
+          0,
+          Math.min(1, viewportState.zoomLevel + zoomChange),
+        );
+
+        api.setZoomLevel(newZoomLevel);
+      },
+      {
+        signal: abortSignal,
+      },
+    );
+  },
 };
 
 function virtualizeItems(
