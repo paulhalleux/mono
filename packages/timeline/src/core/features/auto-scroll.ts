@@ -4,12 +4,11 @@ const DEFAULT_AUTO_SCROLL_INTERVAL = 1000 / 60; // 20 tick per second
 const DEFAULT_AUTO_SCROLL_RATE = 10; // 1 pixel per tick
 
 export declare namespace AutoScroll {
+  export type Direction = "up" | "down" | "left" | "right";
+
   export interface Api {
-    startAutoScroll: (
-      direction: "up" | "down" | "left" | "right",
-      speedMultiplier?: number,
-    ) => void;
-    stopAutoScroll: () => void;
+    startAutoScroll: (direction: Direction, speedMultiplier?: number) => void;
+    stopAutoScroll: (direction?: Direction) => void;
   }
 
   export interface Options {
@@ -18,7 +17,9 @@ export declare namespace AutoScroll {
   }
 
   export interface State {
-    autoScrollIntervalId?: NodeJS.Timeout;
+    autoScrollIntervalId: {
+      [key in Direction]?: NodeJS.Timeout;
+    };
     autoScrollSpeedMultiplier?: number;
   }
 }
@@ -30,7 +31,7 @@ export const AutoScrollFeature: TimelineFeature<
 > = {
   getInitialState() {
     return {
-      autoScrollIntervalId: undefined,
+      autoScrollIntervalId: {},
       autoScrollSpeedMultiplier: 1,
     };
   },
@@ -41,7 +42,7 @@ export const AutoScrollFeature: TimelineFeature<
     } = api.options;
 
     const startAutoScroll = (
-      direction: "up" | "down" | "left" | "right",
+      direction: AutoScroll.Direction,
       speedMultiplier = 1,
     ) => {
       const { autoScrollIntervalId, element } = api.store.getState();
@@ -49,7 +50,7 @@ export const AutoScrollFeature: TimelineFeature<
         return;
       }
 
-      if (autoScrollIntervalId) {
+      if (autoScrollIntervalId[direction]) {
         api.setState((draft) => {
           draft.autoScrollSpeedMultiplier = speedMultiplier;
         });
@@ -85,18 +86,33 @@ export const AutoScrollFeature: TimelineFeature<
       }, autoScrollInterval);
 
       api.setState((draft) => {
-        draft.autoScrollIntervalId = intervalId;
+        draft.autoScrollIntervalId[direction] = intervalId;
       });
     };
 
-    const stopAutoScroll = () => {
+    const stopAutoScroll = (direction?: AutoScroll.Direction) => {
       const { autoScrollIntervalId } = api.store.getState();
-      if (autoScrollIntervalId) {
-        clearInterval(autoScrollIntervalId);
+      if (!direction) {
+        Object.keys(autoScrollIntervalId).forEach((dir) => {
+          const id = autoScrollIntervalId[dir as AutoScroll.Direction];
+          if (id) {
+            clearInterval(id);
+          }
+        });
         api.setState((draft) => {
-          draft.autoScrollIntervalId = undefined;
+          draft.autoScrollIntervalId = {};
           draft.autoScrollSpeedMultiplier = 1;
         });
+        return;
+      } else {
+        const id = autoScrollIntervalId[direction];
+        if (id) {
+          clearInterval(id);
+          api.setState((draft) => {
+            delete draft.autoScrollIntervalId[direction];
+            draft.autoScrollSpeedMultiplier = 1;
+          });
+        }
       }
     };
 

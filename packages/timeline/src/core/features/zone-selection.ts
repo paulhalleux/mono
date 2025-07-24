@@ -3,6 +3,8 @@ import throttle from "lodash/throttle";
 import { DrawRect, TimelineFeature, XYPosition } from "../types";
 import { computeSpeedMultiplier } from "../utils/auto-scroll.ts";
 
+import { AutoScroll } from "./auto-scroll.ts";
+
 export declare namespace ZoneSelection {
   export interface ZoneSelectionPoint extends XYPosition {
     time: number;
@@ -154,17 +156,24 @@ export const ZoneSelectionFeature: TimelineFeature<
           mousePos.x,
         );
 
-        if (mousePos.y < rect.top + 50) {
-          api.startAutoScroll("up", speedMultiplier);
-        } else if (mousePos.y > rect.bottom - 50) {
-          api.startAutoScroll("down", speedMultiplier);
-        } else if (mousePos.x < rect.left + 50) {
-          api.startAutoScroll("left", speedMultiplier);
-        } else if (mousePos.x > rect.right - 50) {
-          api.startAutoScroll("right", speedMultiplier);
-        } else {
-          api.stopAutoScroll();
-        }
+        const directions = {
+          left:
+            mousePos.x < rect.left + (api.options.trackHeaderWidth ?? 0) + 50,
+          right: mousePos.x > rect.right - 50,
+          up: mousePos.y < rect.top + 50,
+          down: mousePos.y > rect.bottom - 50,
+        } as const;
+
+        Object.entries(directions).forEach(([direction, shouldScroll]) => {
+          if (shouldScroll) {
+            api.startAutoScroll(
+              direction as AutoScroll.Direction,
+              speedMultiplier,
+            );
+          } else {
+            api.stopAutoScroll(direction as AutoScroll.Direction);
+          }
+        });
       },
       1000 / 60,
     );
