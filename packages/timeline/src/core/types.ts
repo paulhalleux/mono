@@ -5,6 +5,7 @@ import type { Store, StoreBuilder, StoreUpdater } from "../types/store.ts";
 
 import { AutoScroll } from "./features/auto-scroll.ts";
 import type { Core } from "./features/core.ts";
+import { HorizontalScroll } from "./features/horizontal-scroll.ts";
 import { ItemSelection } from "./features/item-selection.ts";
 import { Ruler } from "./features/ruler.ts";
 import { ZoneSelection } from "./features/zone-selection.ts";
@@ -62,7 +63,8 @@ export interface TimelineOptions
     ItemSelection.Options,
     Ruler.Options,
     ZoneSelection.Options,
-    AutoScroll.Options {}
+    AutoScroll.Options,
+    HorizontalScroll.Options {}
 
 /**
  * Timeline module state.

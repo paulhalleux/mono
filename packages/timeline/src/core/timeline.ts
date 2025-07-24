@@ -7,6 +7,7 @@ import { createDefaultStore, createStoreUpdater } from "../utils/store.ts";
 
 import { AutoScrollFeature } from "./features/auto-scroll.ts";
 import { CoreTimelineFeature, DEFAULT_CHUNK_SIZE } from "./features/core.ts";
+import { HorizontalScrollFeature } from "./features/horizontal-scroll.ts";
 import { ItemSelectionFeature } from "./features/item-selection.ts";
 import { RulerFeature } from "./features/ruler.ts";
 import { ZoneSelectionFeature } from "./features/zone-selection.ts";
@@ -33,6 +34,7 @@ const BUILT_IN_FEATURES = [
   RulerFeature,
   ZoneSelectionFeature,
   AutoScrollFeature,
+  HorizontalScrollFeature,
 ];
 
 export function createTimeline(options: TimelineOptions = {}): TimelineApi {
