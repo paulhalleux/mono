@@ -6,7 +6,7 @@ const DEFAULT_AUTO_SCROLL_RATE = 10; // 1 pixel per tick
 export declare namespace AutoScroll {
   export interface Api {
     startAutoScroll: (
-      direction: "up" | "down",
+      direction: "up" | "down" | "left" | "right",
       speedMultiplier?: number,
     ) => void;
     stopAutoScroll: () => void;
@@ -40,7 +40,10 @@ export const AutoScrollFeature: TimelineFeature<
       autoScrollRate = DEFAULT_AUTO_SCROLL_RATE,
     } = api.options;
 
-    const startAutoScroll = (direction: "up" | "down", speedMultiplier = 1) => {
+    const startAutoScroll = (
+      direction: "up" | "down" | "left" | "right",
+      speedMultiplier = 1,
+    ) => {
       const { autoScrollIntervalId, element } = api.store.getState();
       if (!element) {
         return;
@@ -56,19 +59,29 @@ export const AutoScrollFeature: TimelineFeature<
       const intervalId = setInterval(() => {
         const { autoScrollSpeedMultiplier = 1 } = api.store.getState();
         const scrollTop = element.scrollTop;
-        const newScrollTop =
-          direction === "down"
-            ? scrollTop + autoScrollRate * autoScrollSpeedMultiplier
-            : scrollTop - autoScrollRate * autoScrollSpeedMultiplier;
 
-        const boundedScrollTop = Math.max(
-          0,
-          Math.min(newScrollTop, element.scrollHeight),
-        );
+        const additionalPx = autoScrollRate * autoScrollSpeedMultiplier;
 
-        element.scrollTo({
-          top: boundedScrollTop,
-        });
+        if (direction === "up" || direction === "down") {
+          const newScrollTop =
+            direction === "down"
+              ? scrollTop + additionalPx
+              : scrollTop - additionalPx;
+
+          const boundedScrollTop = Math.max(
+            0,
+            Math.min(newScrollTop, element.scrollHeight),
+          );
+
+          element.scrollTo({
+            top: boundedScrollTop,
+          });
+        } else if (direction === "left" || direction === "right") {
+          const time = api._internal.widthToTime(
+            direction === "right" ? additionalPx : -additionalPx,
+          );
+          api.bendBy(time);
+        }
       }, autoScrollInterval);
 
       api.setState((draft) => {

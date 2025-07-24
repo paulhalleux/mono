@@ -11,7 +11,6 @@
     - [x] Vertical scroll
     - [ ] Horizontal scroll
   - [x] Position relation to scroll container, should grow with scroll
-- [ ] Horizontal scroll with mouse wheel
 - [ ] Keyboard selection
 - [ ] Zoom origin position
 - [ ] Resizable track header
@@ -27,6 +26,7 @@
 - [ ] Track grouping
 - [ ] Sub-tracks w/ expanded/collapsed
 - [ ] Create item instance on demand
+- [ ] Allow multi-directional auto-scroll
 - ... to be continued
 
 ## Done
@@ -44,3 +44,4 @@
   - [x] Sub-ticks
 - [x] Timeline overlay
 - [x] Handle abort in mount/unmount
+- [x] Horizontal scroll with mouse wheel

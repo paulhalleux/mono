@@ -2,20 +2,20 @@
  * Computes the speed multiplier based on the mouse position relative to the element's top and bottom edges.
  * @param element
  * @param mouseY
+ * @param mouseX
  */
 export const computeSpeedMultiplier = (
   element: HTMLElement,
   mouseY: number,
+  mouseX: number,
 ): number => {
-  const rect = element.getBoundingClientRect();
-  const distanceFromTop = mouseY - rect.top;
-  const distanceFromBottom = rect.bottom - mouseY;
-
-  if (distanceFromTop < 50) {
-    return Math.max(1, (50 - distanceFromTop) / 50);
-  } else if (distanceFromBottom < 50) {
-    return Math.max(1, (50 - distanceFromBottom) / 50);
-  }
-
-  return 1;
+  const { top, bottom, left, right } = element.getBoundingClientRect();
+  const distances = [
+    mouseY - top,
+    bottom - mouseY,
+    mouseX - left,
+    right - mouseX,
+  ];
+  const minDistance = Math.min(...distances);
+  return minDistance < 50 ? Math.max(1, (50 - minDistance) / 50) : 1;
 };

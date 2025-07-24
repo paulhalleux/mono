@@ -82,7 +82,10 @@ export interface TimelineState
  * Timeline events.
  * This interface defines the events that the Timeline module can emit.
  */
-export interface TimelineEvents extends Core.Events, ItemSelection.Events {
+export interface TimelineEvents
+  extends Core.Events,
+    ItemSelection.Events,
+    HorizontalScroll.Events {
   "element:mounted": { element: HTMLElement; abortSignal: AbortSignal };
   "element:unmounted": void;
 }
@@ -125,7 +128,8 @@ export interface TimelineApi
   extends InternalTimelineApi,
     Core.Api,
     ItemSelection.Api,
-    AutoScroll.Api {}
+    AutoScroll.Api,
+    HorizontalScroll.Api {}
 
 /**
  * Timeline feature type.

@@ -3,8 +3,16 @@ import throttle from "lodash/throttle";
 import { TimelineFeature } from "../types";
 
 export declare namespace HorizontalScroll {
+  export interface Api {
+    bendBy(time: number): void;
+  }
+
   export interface Options {
     horizontalScrollSpeed?: number;
+  }
+
+  export interface Events {
+    bend: { timePosition: number };
   }
 }
 
@@ -12,6 +20,18 @@ export const HorizontalScrollFeature: TimelineFeature<
   {},
   HorizontalScroll.Options
 > = {
+  createTimeline(api) {
+    return {
+      bendBy: (time: number) => {
+        const currentTimePosition = api.getTimePosition();
+        const newTimePosition = Math.max(0, currentTimePosition + time);
+        api.setTimePosition(newTimePosition);
+        api.eventEmitter.emit("bend", {
+          timePosition: newTimePosition,
+        });
+      },
+    };
+  },
   onMount(api, element, abortSignal) {
     const onWheel = throttle((event: WheelEvent) => {
       if (event.deltaY && !event.shiftKey) {
@@ -34,9 +54,16 @@ export const HorizontalScrollFeature: TimelineFeature<
         api.store.getState().viewportState.viewportDuration;
 
       event.preventDefault();
-      api.setTimePosition(
-        Math.max(0, api.getTimePosition() + deltaX * scrollByTime),
+
+      const newTimePosition = Math.max(
+        0,
+        api.getTimePosition() + deltaX * scrollByTime,
       );
+
+      api.setTimePosition(newTimePosition);
+      api.eventEmitter.emit("bend", {
+        timePosition: newTimePosition,
+      });
     }, 1000 / 45);
 
     element.addEventListener("wheel", onWheel, {
