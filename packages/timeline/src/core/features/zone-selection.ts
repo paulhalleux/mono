@@ -29,7 +29,7 @@ export const ZoneSelectionFeature: TimelineFeature<
       },
     };
   },
-  onMount: (api, element, abortSignal) => {
+  onMount: (api, element, signal) => {
     const onMouseDown = (event: MouseEvent, element: HTMLElement) => {
       if (event.button !== 0 || event.target === element) return;
       if (
@@ -66,13 +66,18 @@ export const ZoneSelectionFeature: TimelineFeature<
       });
     };
 
-    let lastClient: XYPosition = { x: 0, y: 0 };
+    const lastClient = { x: 0, y: 0 };
     const onMouseMove = throttle(
-      (mousePos: XYPosition, element: HTMLElement) => {
+      (mousePos: XYPosition | undefined, element: HTMLElement) => {
         const { active, origin } = api.store.getState().zoneSelection;
         if (!active || !origin) return;
 
-        lastClient = mousePos;
+        if (mousePos) {
+          lastClient.x = mousePos.x;
+          lastClient.y = mousePos.y;
+        } else {
+          mousePos = lastClient;
+        }
 
         const rect = element.getBoundingClientRect();
         const end: XYPosition = {
@@ -147,57 +152,56 @@ export const ZoneSelectionFeature: TimelineFeature<
       });
     };
 
-    const registerEventListeners = (
-      element: HTMLElement,
-      signal: AbortSignal,
-    ) => {
-      element.addEventListener(
-        "mousedown",
-        (event) => onMouseDown(event, element),
-        { signal },
-      );
+    element.addEventListener(
+      "mousedown",
+      (event) => onMouseDown(event, element),
+      { signal },
+    );
 
-      element.addEventListener("scroll", () => {
-        if (api.store.getState().zoneSelection.active) {
-          onMouseMove(lastClient, element);
+    element.addEventListener(
+      "scroll",
+      (ev) => {
+        const { zoneSelection } = api.store.getState();
+        if (zoneSelection.active) {
+          onMouseMove(undefined, element);
+          ev.stopPropagation();
         }
-      });
+      },
+      { signal },
+    );
 
-      window.addEventListener(
-        "mousemove",
-        (event) =>
-          onMouseMove(
-            {
-              x: event.clientX,
-              y: event.clientY,
-            },
-            element,
-          ),
-        { signal },
-      );
+    window.addEventListener(
+      "mousemove",
+      (event) =>
+        onMouseMove(
+          {
+            x: event.clientX,
+            y: event.clientY,
+          },
+          element,
+        ),
+      { signal },
+    );
 
-      window.addEventListener(
-        "mouseup",
-        (event) => {
-          if (event.button !== 0) return;
+    window.addEventListener(
+      "mouseup",
+      (event) => {
+        if (event.button !== 0) return;
+        onMouseUp(element);
+      },
+      {
+        signal,
+      },
+    );
+
+    window.addEventListener(
+      "keydown",
+      (event) => {
+        if (event.key === "Escape") {
           onMouseUp(element);
-        },
-        {
-          signal,
-        },
-      );
-
-      window.addEventListener(
-        "keydown",
-        (event) => {
-          if (event.key === "Escape") {
-            onMouseUp(element);
-          }
-        },
-        { signal },
-      );
-    };
-
-    registerEventListeners(element, abortSignal);
+        }
+      },
+      { signal },
+    );
   },
 };

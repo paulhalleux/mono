@@ -14,6 +14,10 @@ export const HorizontalScrollFeature: TimelineFeature<
 > = {
   onMount(api, element, abortSignal) {
     const onWheel = throttle((event: WheelEvent) => {
+      if (event.deltaY && !event.shiftKey) {
+        return;
+      }
+
       const { horizontalScrollSpeed = 1 } = api.options;
       let deltaX = event.deltaX;
       if (!deltaX && event.deltaY && event.shiftKey) {
