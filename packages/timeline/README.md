@@ -8,8 +8,11 @@
   - [x] Show zone selection
   - [x] Select items
   - [ ] Scroll
-  - [ ] Position relation to scroll container, should grow with scroll
+    - [x] Vertical scroll
+    - [ ] Horizontal scroll
+  - [x] Position relation to scroll container, should grow with scroll
 - [ ] Keyboard selection
+- [ ] Zoom origin position
 - [ ] Resizable track header
 - [ ] Dynamic tracks
 - [ ] Dynamic items

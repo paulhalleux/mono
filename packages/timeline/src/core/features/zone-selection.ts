@@ -1,6 +1,7 @@
 import throttle from "lodash/throttle";
 
 import { DrawRect, TimelineFeature, XYPosition } from "../types";
+import { computeSpeedMultiplier } from "../utils/auto-scroll.ts";
 
 export declare namespace ZoneSelection {
   export interface Options {}
@@ -32,7 +33,7 @@ export const ZoneSelectionFeature: TimelineFeature<
   },
   createTimeline: (api) => {
     const onMouseDown = (event: MouseEvent, element: HTMLElement) => {
-      if (event.button !== 0) return;
+      if (event.button !== 0 || event.target === element) return;
       if (
         event.target instanceof HTMLElement &&
         event.target.dataset.itemId &&
@@ -122,12 +123,22 @@ export const ZoneSelectionFeature: TimelineFeature<
             height,
           };
         });
+
+        const speedMultiplier = computeSpeedMultiplier(element, mousePos.y);
+        if (mousePos.y < element.getBoundingClientRect().top + 50) {
+          api.startAutoScroll("up", speedMultiplier);
+        } else if (mousePos.y > element.getBoundingClientRect().bottom - 50) {
+          api.startAutoScroll("down", speedMultiplier);
+        } else {
+          api.stopAutoScroll();
+        }
       },
       1000 / 60,
     );
 
     const onMouseUp = (event: MouseEvent, element: HTMLElement) => {
       if (event.button !== 0) return;
+      api.stopAutoScroll();
 
       element.ownerDocument.body.style.userSelect = "";
 

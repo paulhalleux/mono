@@ -3,6 +3,7 @@ import StrictEventEmitter from "strict-event-emitter-types";
 
 import type { Store, StoreBuilder, StoreUpdater } from "../types/store.ts";
 
+import { AutoScroll } from "./features/auto-scroll.ts";
 import type { Core } from "./features/core.ts";
 import { ItemSelection } from "./features/item-selection.ts";
 import { Ruler } from "./features/ruler.ts";
@@ -60,7 +61,8 @@ export interface TimelineOptions
     Core.Options,
     ItemSelection.Options,
     Ruler.Options,
-    ZoneSelection.Options {}
+    ZoneSelection.Options,
+    AutoScroll.Options {}
 
 /**
  * Timeline module state.
@@ -70,13 +72,19 @@ export interface TimelineState
   extends Core.State,
     ItemSelection.State,
     Ruler.State,
-    ZoneSelection.State {}
+    ZoneSelection.State,
+    AutoScroll.State {
+  element: HTMLElement | null;
+}
 
 /**
  * Timeline events.
  * This interface defines the events that the Timeline module can emit.
  */
-export interface TimelineEvents extends Core.Events, ItemSelection.Events {}
+export interface TimelineEvents extends Core.Events, ItemSelection.Events {
+  "element:mounted": { element: HTMLElement };
+  "element:unmounted": void;
+}
 
 /**
  * Internal Timeline API.
@@ -88,6 +96,8 @@ export type InternalTimelineApi = {
   setState: StoreUpdater<TimelineState>;
   abortSignal: AbortSignal;
   eventEmitter: StrictEventEmitter<EventEmitter, TimelineEvents>;
+  mount(element: HTMLElement): void;
+  unmount(): void;
   destroy(): void;
   getVisibleTracks(): TrackInstance[];
   getTracks(): TrackInstance[];
@@ -115,7 +125,8 @@ export type InternalTimelineApi = {
 export interface TimelineApi
   extends InternalTimelineApi,
     Core.Api,
-    ItemSelection.Api {}
+    ItemSelection.Api,
+    AutoScroll.Api {}
 
 /**
  * Timeline feature type.
@@ -129,20 +140,20 @@ export type TimelineFeature<
   ItemApi = {},
 > = {
   getInitialState(options: Options): State;
-  createTimeline?(api: InternalTimelineApi, options: Options): Api;
+  createTimeline?(api: TimelineApi, options: Options): Api;
   createTrack?(
-    api: InternalTimelineApi & Api,
+    api: TimelineApi,
     trackDef: TrackDef,
     prev: TrackInstance | undefined,
   ): TrackApi;
-  createItem?(api: InternalTimelineApi & Api, itemDef: ItemDef): ItemApi;
+  createItem?(api: TimelineApi, itemDef: ItemDef): ItemApi;
   itemRecomputeDependencies?(
-    api: InternalTimelineApi & Api,
+    api: TimelineApi,
     item: ItemDef,
     index: number,
   ): any[];
   trackRecomputeDependencies?(
-    api: InternalTimelineApi & Api,
+    api: TimelineApi,
     track: TrackDef,
     index: number,
   ): any[];

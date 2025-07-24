@@ -1,10 +1,11 @@
 import { EventEmitter } from "events";
 
-import { enableMapSet } from "immer";
+import { castDraft, enableMapSet } from "immer";
 import StrictEventEmitter from "strict-event-emitter-types";
 
 import { createDefaultStore, createStoreUpdater } from "../utils/store.ts";
 
+import { AutoScrollFeature } from "./features/auto-scroll.ts";
 import { CoreTimelineFeature, DEFAULT_CHUNK_SIZE } from "./features/core.ts";
 import { ItemSelectionFeature } from "./features/item-selection.ts";
 import { RulerFeature } from "./features/ruler.ts";
@@ -31,6 +32,7 @@ const BUILT_IN_FEATURES = [
   ItemSelectionFeature,
   RulerFeature,
   ZoneSelectionFeature,
+  AutoScrollFeature,
 ];
 
 export function createTimeline(options: TimelineOptions = {}): TimelineApi {
@@ -52,6 +54,28 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     ? options.createStore(initialState)
     : createDefaultStore(initialState);
   const setState = createStoreUpdater(store);
+
+  /**
+   * Mounts the viewport to a given HTML element.
+   * @param element The HTML element to mount the viewport to.
+   */
+  const mount = (element: HTMLElement) => {
+    api.setState((draft) => {
+      draft.element = castDraft(element);
+    });
+    api.eventEmitter.emit("element:mounted", { element });
+  };
+
+  /**
+   * Unmounts the viewport from the currently mounted HTML element.
+   * It stops observing the element for size changes and clears the viewport state.
+   */
+  const unmount = () => {
+    api.setState((draft) => {
+      draft.element = null;
+    });
+    api.eventEmitter.emit("element:unmounted");
+  };
 
   /**
    * Creates a track instance based on the track definition and the features defined in the timeline.
@@ -250,6 +274,8 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
       eventEmitter.removeAllListeners();
       abortController.abort();
     },
+    mount,
+    unmount,
     _internal: {
       createTrack,
       createItem,
@@ -266,13 +292,10 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     getVisibleTracks,
   };
 
-  const api = features.reduce(
-    (api, feature) => ({
-      ...api,
-      ...(feature.createTimeline?.(internalApi, options) ?? {}),
-    }),
-    internalApi as TimelineApi,
-  );
+  let api: TimelineApi = internalApi as TimelineApi;
+  for (const feature of features) {
+    api = Object.assign(api, feature.createTimeline?.(api, options) ?? {});
+  }
 
   return api;
 }

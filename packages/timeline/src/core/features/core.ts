@@ -33,8 +33,6 @@ export type ViewportState = {
 
 export declare namespace Core {
   export interface Api {
-    mount(element: HTMLElement): void;
-    unmount(): void;
     setZoomLevel(zoomLevel: number): void;
     setTimePosition(position: number): void;
     getTimePosition(): number;
@@ -67,8 +65,6 @@ export declare namespace Core {
   }
 
   export interface Events {
-    "element:mounted": { element: HTMLElement };
-    "element:unmounted": void;
     "viewport:updated": ViewportState;
   }
 }
@@ -124,33 +120,22 @@ export const CoreTimelineFeature: TimelineFeature<
       }
     });
 
-    /**
-     * Mounts the viewport to a given HTML element.
-     * @param element The HTML element to mount the viewport to.
-     */
-    const mount = (element: HTMLElement) => {
+    api.eventEmitter.on("element:mounted", ({ element }) => {
       resizeObserver.observe(element);
-      api.eventEmitter.emit("element:mounted", { element });
       registerScrollListener(element, {
         signal: api.abortSignal,
         initialRun: true,
       });
-    };
+    });
 
-    /**
-     * Unmounts the viewport from the currently mounted HTML element.
-     * It stops observing the element for size changes and clears the viewport state.
-     */
-    const unmount = () => {
+    api.eventEmitter.on("element:unmounted", () => {
       resizeObserver.disconnect();
 
       api.setState((draft) => {
         draft.viewportState.viewportWidth = 0;
         draft.viewportState.zoomLevel = 1;
       });
-
-      api.eventEmitter.emit("element:unmounted");
-    };
+    });
 
     /**
      * Sets the zoom level of the timeline.
@@ -276,8 +261,6 @@ export const CoreTimelineFeature: TimelineFeature<
     };
 
     return {
-      mount,
-      unmount,
       setZoomLevel,
       setTimePosition,
       getTimePosition,
