@@ -62,7 +62,6 @@ export interface TimelineOptions
     Core.Options,
     ItemSelection.Options,
     Ruler.Options,
-    ZoneSelection.Options,
     AutoScroll.Options,
     HorizontalScroll.Options {}
 
@@ -139,7 +138,7 @@ export type TimelineFeature<
   TrackApi = {},
   ItemApi = {},
 > = {
-  getInitialState(options: Options): State;
+  getInitialState?(options: Options): State;
   createTimeline?(api: TimelineApi, options: Options): Api;
   createTrack?(
     api: TimelineApi,
@@ -157,6 +156,11 @@ export type TimelineFeature<
     track: TrackDef,
     index: number,
   ): any[];
+  onMount?(
+    api: TimelineApi,
+    element: HTMLElement,
+    abortSignal: AbortSignal,
+  ): void;
 };
 
 export type XYPosition = {

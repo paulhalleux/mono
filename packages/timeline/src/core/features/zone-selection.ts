@@ -4,8 +4,6 @@ import { DrawRect, TimelineFeature, XYPosition } from "../types";
 import { computeSpeedMultiplier } from "../utils/auto-scroll.ts";
 
 export declare namespace ZoneSelection {
-  export interface Options {}
-
   export interface State {
     zoneSelection: {
       active: boolean;
@@ -18,7 +16,7 @@ export declare namespace ZoneSelection {
 
 export const ZoneSelectionFeature: TimelineFeature<
   {},
-  ZoneSelection.Options,
+  {},
   ZoneSelection.State
 > = {
   getInitialState() {
@@ -31,7 +29,7 @@ export const ZoneSelectionFeature: TimelineFeature<
       },
     };
   },
-  createTimeline: (api) => {
+  onMount: (api, element, abortSignal) => {
     const onMouseDown = (event: MouseEvent, element: HTMLElement) => {
       if (event.button !== 0 || event.target === element) return;
       if (
@@ -200,10 +198,6 @@ export const ZoneSelectionFeature: TimelineFeature<
       );
     };
 
-    api.eventEmitter.on("element:mounted", ({ element, abortSignal }) => {
-      registerEventListeners(element, abortSignal);
-    });
-
-    return {};
+    registerEventListeners(element, abortSignal);
   },
 };

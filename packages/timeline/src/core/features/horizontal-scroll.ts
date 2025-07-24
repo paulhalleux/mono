@@ -12,10 +12,7 @@ export const HorizontalScrollFeature: TimelineFeature<
   {},
   HorizontalScroll.Options
 > = {
-  getInitialState() {
-    return {};
-  },
-  createTimeline: (api) => {
+  onMount(api, element, abortSignal) {
     const onWheel = throttle((event: WheelEvent) => {
       const { horizontalScrollSpeed = 1 } = api.options;
       let deltaX = event.deltaX;
@@ -38,13 +35,9 @@ export const HorizontalScrollFeature: TimelineFeature<
       );
     }, 1000 / 45);
 
-    api.eventEmitter.on("element:mounted", ({ element, abortSignal }) => {
-      element.addEventListener("wheel", onWheel, {
-        passive: false,
-        signal: abortSignal,
-      });
+    element.addEventListener("wheel", onWheel, {
+      passive: false,
+      signal: abortSignal,
     });
-
-    return {};
   },
 };

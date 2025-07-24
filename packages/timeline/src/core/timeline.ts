@@ -46,7 +46,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   const initialState: TimelineState = features.reduce(
     (state, feature) => ({
       ...state,
-      ...feature.getInitialState(options),
+      ...(feature.getInitialState?.(options) ?? {}),
     }),
     {} as TimelineState,
   );
@@ -71,6 +71,10 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     api.eventEmitter.emit("element:mounted", {
       element,
       abortSignal: abortController.signal,
+    });
+
+    features.forEach((feature) => {
+      feature.onMount?.(api, element, abortController.signal);
     });
   };
 

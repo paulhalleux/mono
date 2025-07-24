@@ -44,6 +44,7 @@ export function Docs() {
     tracks,
     items,
     rulerHeight,
+    minVisibleDuration: 5000,
   });
 
   const trackInstances = timeline.store(
