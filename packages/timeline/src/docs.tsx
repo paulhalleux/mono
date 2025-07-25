@@ -120,7 +120,9 @@ export function Docs() {
                   <Timeline.TrackHeader className="docs-track-header">
                     {track.top}
                   </Timeline.TrackHeader>
-                  <Timeline.TrackOverlay />
+                  {track.isDropTarget && (
+                    <Timeline.TrackOverlay className="docs-drop-overlay" />
+                  )}
                   <Timeline.TrackView>{renderTrackItem}</Timeline.TrackView>
                 </Timeline.Track>
               ))}
@@ -141,11 +143,11 @@ const Controls = ({
   const timeline = useTimelineApi();
   const timePosition = useTimelineStore((_, api) => api.getTimePosition());
   const viewport = useTimelineStore((st) => st.viewportState);
-  const itemDragState = useTimelineStore((st) => st.itemDragState);
+  const trackDropState = useTimelineStore((st) => st.trackDropState);
 
   return (
     <>
-      <pre>{JSON.stringify(itemDragState, null, 2)}</pre>
+      <pre>{JSON.stringify(trackDropState, null, 2)}</pre>
       <input
         type="range"
         min="0"

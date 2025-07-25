@@ -1,21 +1,21 @@
 const DATA_TRANSFER_TYPE = "tl/data";
 
-type CreateDragDataTransferParams = {
+export type TimelineDragData = {
   itemType: string;
   data?: Record<string, any>;
 };
 
 export const createDragDataTransfer = (
   dataTransfer: DataTransfer,
-  { itemType, data }: CreateDragDataTransferParams,
+  dragData: TimelineDragData,
 ) => {
-  dataTransfer.setData(DATA_TRANSFER_TYPE, JSON.stringify({ itemType, data }));
+  dataTransfer.setData(DATA_TRANSFER_TYPE, JSON.stringify(dragData));
   dataTransfer.setDragImage(new Image(), 0, 0);
 };
 
 export const getDragDataTransfer = (
   dataTransfer: DataTransfer,
-): { itemType: string; data?: Record<string, any> } | null => {
+): TimelineDragData | null => {
   const data = dataTransfer.getData(DATA_TRANSFER_TYPE);
   if (!data) return null;
   try {

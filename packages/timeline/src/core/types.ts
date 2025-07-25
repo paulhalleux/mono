@@ -9,6 +9,7 @@ import { HorizontalScroll } from "./features/horizontal-scroll.ts";
 import { ItemDrag } from "./features/item-drag.ts";
 import { ItemSelection } from "./features/item-selection.ts";
 import { Ruler } from "./features/ruler.ts";
+import { TrackDrop } from "./features/track-drop.ts";
 import { TrackSelection } from "./features/track-selection.ts";
 import { ZoneSelection } from "./features/zone-selection.ts";
 
@@ -28,7 +29,8 @@ export interface TrackDef {
 export interface TrackInstance
   extends TrackDef,
     TrackSelection.TrackInstance,
-    Core.TrackInstance {}
+    Core.TrackInstance,
+    TrackDrop.TrackInstance {}
 
 /**
  * Item definition.
@@ -71,7 +73,8 @@ export interface TimelineOptions
     Ruler.Options,
     AutoScroll.Options,
     HorizontalScroll.Options,
-    ItemDrag.Options {}
+    ItemDrag.Options,
+    TrackDrop.Options {}
 
 /**
  * Timeline module state.
@@ -84,7 +87,8 @@ export interface TimelineState
     Ruler.State,
     ZoneSelection.State,
     AutoScroll.State,
-    ItemDrag.State {
+    ItemDrag.State,
+    TrackDrop.State {
   element: HTMLElement | null;
 }
 
@@ -97,7 +101,8 @@ export interface TimelineEvents
     ItemSelection.Events,
     TrackSelection.Events,
     HorizontalScroll.Events,
-    ItemDrag.Events {
+    ItemDrag.Events,
+    TrackDrop.Events {
   "element:mounted": { element: HTMLElement; abortSignal: AbortSignal };
   "element:unmounted": void;
 }
@@ -144,8 +149,7 @@ export interface TimelineApi
     ItemSelection.Api,
     TrackSelection.Api,
     AutoScroll.Api,
-    HorizontalScroll.Api,
-    ItemDrag.Api {}
+    HorizontalScroll.Api {}
 
 /**
  * Timeline feature type.

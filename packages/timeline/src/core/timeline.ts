@@ -12,6 +12,7 @@ import { HorizontalScrollFeature } from "./features/horizontal-scroll.ts";
 import { ItemDragFeature } from "./features/item-drag.ts";
 import { ItemSelectionFeature } from "./features/item-selection.ts";
 import { RulerFeature } from "./features/ruler.ts";
+import { TrackDropFeature } from "./features/track-drop.ts";
 import { TrackSelectionFeature } from "./features/track-selection.ts";
 import { ZoneSelectionFeature } from "./features/zone-selection.ts";
 import { memoizeArrayItems } from "./utils/memoize-array.ts";
@@ -40,6 +41,7 @@ const BUILT_IN_FEATURES = [
   HorizontalScrollFeature,
   TrackSelectionFeature,
   ItemDragFeature,
+  TrackDropFeature,
 ];
 
 export function createTimeline(options: TimelineOptions = {}): TimelineApi {

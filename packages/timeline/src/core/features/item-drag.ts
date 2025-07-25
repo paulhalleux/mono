@@ -3,7 +3,6 @@ import { createDragDataTransfer } from "../utils/dnd.ts";
 import { getTimelinePosition } from "../utils/position.ts";
 
 export declare namespace ItemDrag {
-  export interface Api {}
   export interface ItemInstance {
     isDragging: boolean;
   }
@@ -16,11 +15,23 @@ export declare namespace ItemDrag {
       currentTrackId?: string;
     };
   }
-  export interface Events {}
+  export interface Events {
+    "item:dragstart": {
+      itemId: string;
+      trackId: string;
+      mouseOrigin: TimelinePosition;
+    };
+    "item:dragend": {
+      itemId: string;
+      trackId: string | undefined;
+      mousePosition: TimelinePosition;
+      isDropped: boolean;
+    };
+  }
 }
 
 export const ItemDragFeature: TimelineFeature<
-  ItemDrag.Api,
+  {},
   ItemDrag.Options,
   ItemDrag.State,
   {},
@@ -70,23 +81,39 @@ export const ItemDragFeature: TimelineFeature<
             trackId,
           },
         });
+
+        api.eventEmitter.emit("item:dragstart", {
+          itemId,
+          trackId,
+          mouseOrigin: origin,
+        });
       },
       {
         signal: abortSignal,
       },
     );
 
-    const onDragEnd = () => {
+    const onDragEnd = (isDropped: boolean) => {
+      const { itemDragState } = api.store.getState();
+      if (!itemDragState) return;
+
+      api.eventEmitter.emit("item:dragend", {
+        itemId: itemDragState.itemId,
+        trackId: itemDragState.currentTrackId,
+        mousePosition: itemDragState.mousePosition,
+        isDropped,
+      });
+
       api.setState((draft) => {
         draft.itemDragState = undefined;
       });
     };
 
-    window.addEventListener("dragend", onDragEnd, {
+    window.addEventListener("dragend", () => onDragEnd(false), {
       signal: abortSignal,
     });
 
-    window.addEventListener("drop", onDragEnd, {
+    window.addEventListener("drop", () => onDragEnd(true), {
       signal: abortSignal,
     });
 
