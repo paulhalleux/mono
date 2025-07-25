@@ -4,11 +4,10 @@ export const Waveform = {
     const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
     const rawData = audioBuffer.getChannelData(0);
 
-    const sampleCount = Math.floor(400);
-    const blockSize = Math.floor(rawData.length / sampleCount);
+    const blockSize = Math.floor(rawData.length / audioBuffer.sampleRate);
     const samples: number[] = [];
 
-    for (let i = 0; i < sampleCount; i++) {
+    for (let i = 0; i < audioBuffer.sampleRate; i++) {
       let sum = 0;
       for (let j = 0; j < blockSize; j++) {
         sum += Math.abs(rawData[i * blockSize + j]);

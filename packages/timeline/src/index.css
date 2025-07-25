@@ -140,9 +140,3 @@
   background: rgba(255, 255, 255, 0.3);
   border: 1px solid #fff;
 }
-
-.docs-drop-overlay {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px dashed #ffffff;
-  border-radius: 4px;
-}

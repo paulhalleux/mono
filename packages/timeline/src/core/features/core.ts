@@ -297,23 +297,21 @@ export const CoreTimelineFeature: TimelineFeature<
     ];
   },
   createTrack(api, { id }, previousTrack) {
-    const getItems = memoizeArrayItems<TimelineItemInstance, [trackId: string]>(
-      {
-        deps: (index, [trackId]: [trackId: string]) => {
-          const { itemsByTrack } = api.store.getState();
-          const itemDef = itemsByTrack[trackId][index];
-          return api._internal.getItemDependencies(itemDef, index);
-        },
-        itemFactory: (index, _, [trackId]) => {
-          const item = api.store.getState().itemsByTrack[trackId][index];
-          return api._internal.createItem(item);
-        },
-        itemCountFn: (trackId) => {
-          const items = api.store.getState().itemsByTrack[trackId];
-          return items ? items.length : 0;
-        },
+    const items = memoizeArrayItems<TimelineItemInstance, [trackId: string]>({
+      deps: (index, [trackId]: [trackId: string]) => {
+        const { itemsByTrack } = api.store.getState();
+        const itemDef = itemsByTrack[trackId][index];
+        return api._internal.getItemDependencies(itemDef, index);
       },
-    );
+      itemFactory: (index, _, [trackId]) => {
+        const item = api.store.getState().itemsByTrack[trackId][index];
+        return api._internal.createItem(item);
+      },
+      itemCountFn: (trackId) => {
+        const items = api.store.getState().itemsByTrack[trackId];
+        return items ? items.length : 0;
+      },
+    });
 
     return {
       top: (previousTrack?.top ?? 0) + (previousTrack?.height ?? 0),
@@ -321,11 +319,11 @@ export const CoreTimelineFeature: TimelineFeature<
         "data-track-id": id,
       },
       getItems: () => {
-        return getItems(id);
+        return items.get(id);
       },
       getVisibleItems: () => {
         return virtualizeItems(
-          getItems(id),
+          items.get(id),
           api.getTimePosition(),
           api.store.getState().viewportState.viewportDuration,
         );

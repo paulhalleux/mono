@@ -172,7 +172,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * It uses memoization to optimize performance by caching track instances.
    * @returns An array of track instances.
    */
-  const getTracks = memoizeArrayItems<TimelineTrackInstance, []>({
+  const tracks = memoizeArrayItems<TimelineTrackInstance, []>({
     deps: (index) => {
       const { tracks = [] } = api.options;
       const trackDef = tracks[index];
@@ -200,10 +200,9 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     const {
       viewportState: { virtualizedTracks },
     } = api.store.getState();
-    return getTracks().slice(
-      virtualizedTracks.startIndex,
-      virtualizedTracks.endIndex + 1,
-    );
+    return tracks
+      .get()
+      .slice(virtualizedTracks.startIndex, virtualizedTracks.endIndex + 1);
   };
 
   /**
@@ -214,8 +213,8 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   const getTrackAtHeight = (
     height: number,
   ): TimelineTrackInstance | undefined => {
-    const tracks = getTracks();
-    return tracks.find(
+    const trackList = tracks.get();
+    return trackList.find(
       (track) => track.top <= height && track.top + track.height > height,
     );
   };
@@ -230,8 +229,8 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     topHeight: number,
     bottomHeight: number,
   ): TimelineTrackInstance[] => {
-    const tracks = getTracks();
-    return tracks.filter(
+    const trackList = tracks.get();
+    return trackList.filter(
       (track) =>
         track.top + track.height > topHeight && track.top < bottomHeight,
     );
@@ -243,8 +242,8 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @returns The track instance with the specified ID, or undefined if not found.
    */
   const getTrackById = (id: string): TrackInstance | undefined => {
-    const tracks = getTracks();
-    return tracks.find((track) => track.id === id);
+    const trackList = tracks.get();
+    return trackList.find((track) => track.id === id);
   };
 
   /**
@@ -337,7 +336,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     },
     mount,
     unmount,
-    getTracks,
+    getTracks: tracks.get,
     getVisibleTracks,
     getTrackAtHeight,
     getTracksInRange,

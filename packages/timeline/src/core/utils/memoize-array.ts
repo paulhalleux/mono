@@ -33,32 +33,46 @@ export function memoizeArrayItems<T, A extends any[]>({
   itemCountFn: (...args: A) => number;
   deps: (index: number, args: A) => any;
   compareItem?: ItemComparator;
-}): (...args: A) => T[] {
+}) {
   let cache: MemoizedArrayItemsCache<T> | null = null;
 
-  return (...args: A): T[] => {
-    const count = itemCountFn(...args);
-    if (!cache || cache.items.length !== count) {
-      const items: MemoizedItemCache<T>[] = [];
-      for (let i = 0; i < count; i++) {
-        const value = itemFactory(i, items[i - 1]?.value, args);
-        const dep = deps(i, args);
-        items.push({ value, dep });
-      }
-      cache = { items };
-    } else {
-      for (let i = 0; i < count; i++) {
-        const newDep = deps(i, args);
-        if (!compareItem(cache.items[i].dep, newDep)) {
-          const newValue = itemFactory(i, cache.items[i - 1]?.value, args);
-          cache.items[i] = {
-            value: newValue,
-            dep: newDep,
-          };
+  return {
+    get: (...args: A): T[] => {
+      const count = itemCountFn(...args);
+      if (!cache || cache.items.length !== count) {
+        const items: MemoizedItemCache<T>[] = [];
+        for (let i = 0; i < count; i++) {
+          const value = itemFactory(i, items[i - 1]?.value, args);
+          const dep = deps(i, args);
+          items.push({ value, dep });
+        }
+        cache = { items };
+      } else {
+        for (let i = 0; i < count; i++) {
+          const newDep = deps(i, args);
+          if (!compareItem(cache.items[i].dep, newDep)) {
+            const newValue = itemFactory(i, cache.items[i - 1]?.value, args);
+            cache.items[i] = {
+              value: newValue,
+              dep: newDep,
+            };
+          }
         }
       }
-    }
 
-    return cache.items.map((item) => item.value);
+      return cache.items.map((item) => item.value);
+    },
+    refreshItem: (index: number, args: A) => {
+      if (!cache) return;
+      const count = itemCountFn(...args);
+      if (index < 0 || index >= count) return;
+
+      const newValue = itemFactory(index, cache.items[index - 1]?.value, args);
+      const newDep = deps(index, args);
+      cache.items[index] = {
+        value: newValue,
+        dep: newDep,
+      };
+    },
   };
 }

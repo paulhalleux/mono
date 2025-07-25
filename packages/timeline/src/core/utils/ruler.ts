@@ -1,6 +1,9 @@
 import { timeToWidth } from "./scale.ts";
 
 function* getAvailableDurationMills(): Generator<number, void, unknown> {
+  // milliseconds
+  yield 100; // 100 milliseconds
+  yield 500; // 500 milliseconds
   // seconds
   for (const number of [1, 2, 5, 10, 15, 20, 30]) {
     yield number * 1000;

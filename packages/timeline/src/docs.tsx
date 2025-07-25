@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import { clsx } from "clsx";
-import { useShallow } from "zustand/react/shallow";
 
 import {
   ItemDef,
@@ -8,7 +7,8 @@ import {
   TrackDef,
   TrackInstance,
 } from "./core/types.ts";
-import { Waveform } from "./modules/waveform.ts";
+import { Waveform } from "./modules/waveform/waveform.ts";
+import { Waveform as WaveformComponent } from "./modules/waveform/waveform.tsx";
 import {
   TimelineProvider,
   useTimeline,
@@ -17,7 +17,6 @@ import {
 } from "./react/adapter.ts";
 import { Timeline } from "./react/components/Timeline.tsx";
 import { ZoneSelection } from "./react/components/ZoneSelection.tsx";
-import { Waveform as WaveformComponent } from "./waveform.tsx";
 
 const rulerHeight = 32;
 const trackHeaderWidth = 320;
@@ -30,8 +29,8 @@ const items: ItemDef[] = tracks.flatMap((track) =>
   Array.from({ length: 10 })
     .map((_, i) => ({
       id: `${track.id}-item-${i}`,
-      start: i * 1000 * 15,
-      end: (i + 1) * 1000 * 15,
+      start: i * 57983,
+      end: (i + 1) * 57983,
       trackId: track.id,
     }))
     .filter(() => Math.random() > 0.5),
@@ -44,17 +43,14 @@ export function Docs() {
     tracks,
     items,
     rulerHeight,
+    minTickIntervalWidth: 150,
     minVisibleDuration: 5000,
+    maxVisibleDuration: 1000 * 60 * 10,
   });
-
-  const trackInstances = timeline.store(
-    useShallow(() => timeline.getVisibleTracks()),
-  );
 
   const renderTrackItem = useCallback(
     (item: ItemInstance, track: TrackInstance) => (
       <Timeline.Item
-        key={item.id}
         item={item}
         className={clsx("docs-timeline-item", {
           ["selected"]: item.isSelected,
@@ -113,23 +109,16 @@ export function Docs() {
               </Timeline.RulerView>
             </Timeline.Ruler>
             <Timeline.Tracks>
-              {trackInstances.map((track) => (
-                <Timeline.Track
-                  key={track.id}
-                  track={track}
-                  className="docs-track"
-                >
+              {(track) => (
+                <Timeline.Track track={track} className="docs-track">
                   <Timeline.TrackHeader className="docs-track-header">
                     {track.top}
                   </Timeline.TrackHeader>
-                  {track.isDropTarget && (
-                    <Timeline.TrackOverlay className="docs-drop-overlay" />
-                  )}
                   <Timeline.TrackView>
                     <Timeline.TrackItems>{renderTrackItem}</Timeline.TrackItems>
                   </Timeline.TrackView>
                 </Timeline.Track>
-              ))}
+              )}
             </Timeline.Tracks>
           </Timeline.Viewport>
         </Timeline>
@@ -147,11 +136,11 @@ const Controls = ({
   const timeline = useTimelineApi();
   const timePosition = useTimelineStore((_, api) => api.getTimePosition());
   const viewport = useTimelineStore((st) => st.viewportState);
-  const itemDragState = useTimelineStore((st) => st.itemDragState);
+  // const itemDragState = useTimelineStore((st) => st.itemDragState);
 
   return (
     <>
-      <pre>{JSON.stringify(itemDragState, null, 2)}</pre>
+      <pre>{JSON.stringify(viewport, null, 2)}</pre>
       <input
         type="range"
         min="0"
@@ -185,9 +174,10 @@ const millsToTime = (ms: number) => {
   const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
   const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
   const seconds = Math.floor((ms % (60 * 1000)) / 1000);
+  const milliseconds = ms % 1000;
 
-  const units = ["d", "h", "m", "s"];
-  const values = [days, hours, minutes, seconds];
+  const units = ["d", "h", "m", "s", "ms"];
+  const values = [days, hours, minutes, seconds, milliseconds];
 
   return (
     values
