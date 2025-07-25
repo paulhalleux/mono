@@ -6,7 +6,7 @@ import StrictEventEmitter from "strict-event-emitter-types";
 import { createDefaultStore, createStoreUpdater } from "../utils/store.ts";
 
 import { AutoScrollFeature } from "./features/auto-scroll.ts";
-import { CoreTimelineFeature, DEFAULT_CHUNK_SIZE } from "./features/core.ts";
+import { CoreTimelineFeature } from "./features/core.ts";
 import { HorizontalScrollFeature } from "./features/horizontal-scroll.ts";
 import { ItemSelectionFeature } from "./features/item-selection.ts";
 import { RulerFeature } from "./features/ruler.ts";
@@ -257,9 +257,14 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    */
   const timeToLeft = (time: number): number => {
     const {
-      viewportState: { viewportWidth, viewportDuration },
+      viewportState: { viewportWidth, viewportDuration, chunkedPosition },
     } = api.store.getState();
-    return ScaleUtils.timeToLeft(time, viewportWidth, viewportDuration);
+    const scrollDuration = chunkedPosition.index * chunkedPosition.duration;
+    return ScaleUtils.timeToLeft(
+      time - scrollDuration,
+      viewportWidth,
+      viewportDuration,
+    );
   };
 
   /**
@@ -273,11 +278,10 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     const {
       viewportState: { viewportWidth, viewportDuration, chunkedPosition },
     } = api.store.getState();
-    const chunkDuration = viewportDuration * DEFAULT_CHUNK_SIZE;
     return (
       ScaleUtils.widthToTime(x, viewportWidth, viewportDuration) +
       chunkedPosition.offset +
-      chunkedPosition.index * chunkDuration
+      chunkedPosition.index * chunkedPosition.duration
     );
   };
 

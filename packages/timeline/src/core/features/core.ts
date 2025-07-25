@@ -10,11 +10,12 @@ import { binarySearchIndex } from "../utils/search.ts";
 const DEFAULT_TRACK_HEADER_WIDTH = 0;
 const DEFAULT_MIN_VISIBLE_DURATION = 1000 * 10; // 10 seconds
 const DEFAULT_MAX_VISIBLE_DURATION = 1000 * 60 * 10; // 10 minutes
-export const DEFAULT_CHUNK_SIZE = 640; // 640x viewport width
+const DEFAULT_CHUNK_SIZE = 2; // 2x viewport width
 
 type ChunkedPosition = {
   index: number; // Index of the chunk
   offset: number; // Offset within the chunk
+  duration: number; // Duration of the chunk in milliseconds
 };
 
 export type ViewportState = {
@@ -57,6 +58,7 @@ export declare namespace Core {
     maxVisibleDuration?: number;
     tracks?: TrackDef[];
     items?: ItemDef[];
+    viewportChunkSize?: number;
   }
 
   export interface State {
@@ -92,6 +94,7 @@ export const CoreTimelineFeature: TimelineFeature<
         chunkedPosition: {
           index: 0,
           offset: 0,
+          duration: DEFAULT_MIN_VISIBLE_DURATION * DEFAULT_CHUNK_SIZE,
         },
       },
       itemsByTrack: (options.items ?? []).reduce<Record<string, ItemDef[]>>(
@@ -150,6 +153,8 @@ export const CoreTimelineFeature: TimelineFeature<
           options.minVisibleDuration ?? DEFAULT_MIN_VISIBLE_DURATION;
         const maxVisibleDuration =
           options.maxVisibleDuration ?? DEFAULT_MAX_VISIBLE_DURATION;
+        const viewportChunkSize =
+          options.viewportChunkSize ?? DEFAULT_CHUNK_SIZE;
 
         draft.viewportState.zoomLevel = roundedZoomLevel;
         draft.viewportState.viewportDuration = Math.round(
@@ -158,10 +163,11 @@ export const CoreTimelineFeature: TimelineFeature<
         );
 
         const chunkDuration =
-          draft.viewportState.viewportDuration * DEFAULT_CHUNK_SIZE;
+          draft.viewportState.viewportDuration * viewportChunkSize;
         draft.viewportState.chunkedPosition = {
           index: Math.floor(prevTimeDuration / chunkDuration),
           offset: prevTimeDuration % chunkDuration,
+          duration: chunkDuration,
         };
       });
 
@@ -174,11 +180,14 @@ export const CoreTimelineFeature: TimelineFeature<
      */
     const setTimePosition = (position: number) => {
       api.setState((draft) => {
+        const viewportChunkSize =
+          options.viewportChunkSize ?? DEFAULT_CHUNK_SIZE;
         const chunkDuration =
-          draft.viewportState.viewportDuration * DEFAULT_CHUNK_SIZE;
+          draft.viewportState.viewportDuration * viewportChunkSize;
         draft.viewportState.chunkedPosition = {
           index: Math.floor(position / chunkDuration),
-          offset: position % chunkDuration,
+          offset: Math.floor(position % chunkDuration),
+          duration: chunkDuration,
         };
       });
 
@@ -190,10 +199,10 @@ export const CoreTimelineFeature: TimelineFeature<
      * @returns The current time position in milliseconds.
      */
     const getTimePosition = () => {
-      const { chunkedPosition, viewportDuration } =
-        api.store.getState().viewportState;
-      const chunkDuration = viewportDuration * DEFAULT_CHUNK_SIZE;
-      return chunkedPosition.index * chunkDuration + chunkedPosition.offset;
+      const { chunkedPosition } = api.store.getState().viewportState;
+      const pastChunkDuration =
+        chunkedPosition.index * chunkedPosition.duration;
+      return pastChunkDuration + chunkedPosition.offset;
     };
 
     /**
@@ -205,7 +214,8 @@ export const CoreTimelineFeature: TimelineFeature<
       const { chunkedPosition } = viewportState;
 
       const timePositionOffsetPx = -api._internal.timeToLeft(
-        chunkedPosition.offset,
+        chunkedPosition.offset +
+          chunkedPosition.index * chunkedPosition.duration,
       );
 
       api.setState((draft) => {
@@ -278,7 +288,12 @@ export const CoreTimelineFeature: TimelineFeature<
   },
   itemRecomputeDependencies(api, item) {
     const { viewportState } = api.store.getState();
-    return [item, viewportState.viewportWidth, viewportState.viewportDuration];
+    return [
+      item,
+      viewportState.viewportWidth,
+      viewportState.viewportDuration,
+      viewportState.chunkedPosition.index,
+    ];
   },
   createTrack(api, { id }, previousTrack) {
     const getItems = memoizeArrayItems<TimelineItemInstance, [trackId: string]>(

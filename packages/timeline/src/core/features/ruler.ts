@@ -2,7 +2,7 @@ import { TimelineFeature } from "../types";
 import { memoize } from "../utils/memoize.ts";
 import { getTickIntervalTime } from "../utils/ruler.ts";
 
-import { DEFAULT_CHUNK_SIZE, ViewportState } from "./core.ts";
+import { ViewportState } from "./core.ts";
 
 const DEFAULT_MIN_TICK_INTERVAL_WIDTH = 160;
 
@@ -31,12 +31,21 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
     };
   },
   createTimeline: (api) => {
+    const getTickIntervalTimeMemo = memoize({
+      factory: (viewport: ViewportState, minTickIntervalWidth: number) => {
+        return getTickIntervalTime(viewport, minTickIntervalWidth);
+      },
+      deps: (viewport) => {
+        return [viewport.viewportWidth, viewport.viewportDuration];
+      },
+    });
+
     const getTicks = memoize({
       factory: (viewport: ViewportState) => {
         const { minTickIntervalWidth = DEFAULT_MIN_TICK_INTERVAL_WIDTH } =
           api.options;
 
-        const tickIntervalTime = getTickIntervalTime(
+        const tickIntervalTime = getTickIntervalTimeMemo(
           viewport,
           minTickIntervalWidth,
         );
@@ -44,9 +53,11 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
         const ticksCount =
           Math.ceil(viewport.viewportDuration / tickIntervalTime) + 1;
 
-        const chunkDuration = viewport.viewportDuration * DEFAULT_CHUNK_SIZE;
         const scrollDelta = Math.floor(
-          viewport.chunkedPosition.offset / tickIntervalTime,
+          (viewport.chunkedPosition.offset +
+            viewport.chunkedPosition.index *
+              viewport.chunkedPosition.duration) /
+            tickIntervalTime,
         );
 
         const tickWidth = api._internal.timeToWidth(tickIntervalTime);
@@ -55,7 +66,7 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
           ticks: Array.from({ length: ticksCount }, (_, i) => {
             const time = i * tickIntervalTime + scrollDelta * tickIntervalTime;
             return {
-              time: time + viewport.chunkedPosition.index * chunkDuration,
+              time: time,
               width: tickWidth,
               left: api._internal.timeToLeft(time),
             };
