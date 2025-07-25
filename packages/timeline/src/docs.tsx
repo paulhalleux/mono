@@ -143,11 +143,11 @@ const Controls = ({
   const timeline = useTimelineApi();
   const timePosition = useTimelineStore((_, api) => api.getTimePosition());
   const viewport = useTimelineStore((st) => st.viewportState);
-  const trackDropState = useTimelineStore((st) => st.trackDropState);
+  const itemDragState = useTimelineStore((st) => st.itemDragState);
 
   return (
     <>
-      <pre>{JSON.stringify(trackDropState, null, 2)}</pre>
+      <pre>{JSON.stringify(itemDragState, null, 2)}</pre>
       <input
         type="range"
         min="0"

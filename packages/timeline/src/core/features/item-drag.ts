@@ -11,6 +11,7 @@ export declare namespace ItemDrag {
     itemDragState?: {
       itemId: string;
       mouseOrigin: TimelinePosition;
+      clientOffset: TimelinePosition;
       mousePosition: TimelinePosition;
       currentTrackId?: string;
     };
@@ -64,11 +65,20 @@ export const ItemDragFeature: TimelineFeature<
           element,
         );
 
+        const item = api.getItemById(itemId);
+        if (!item) return;
+        const timeOffset = Math.abs(item.start - origin.time);
+
         api.setState((draft) => {
           draft.itemDragState = {
             itemId,
             mouseOrigin: origin,
             mousePosition: origin,
+            clientOffset: {
+              time: timeOffset,
+              x: api._internal.timeToWidth(timeOffset),
+              y: 0,
+            },
           };
         });
 
