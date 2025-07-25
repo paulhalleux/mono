@@ -4,13 +4,8 @@
 ![img_1.png](img_1.png)
 
 ## Todo
-- [ ] Zone selection
-  - [x] Show zone selection
-  - [x] Select items
-  - [ ] Scroll
-    - [x] Vertical scroll
-    - [ ] Horizontal scroll
-  - [x] Position relation to scroll container, should grow with scroll
+- [ ] Item dragging
+- [ ] Multi-item dragging
 - [ ] Keyboard selection
 - [ ] Zoom origin position
 - [ ] Resizable track header
@@ -26,7 +21,6 @@
 - [ ] Track grouping
 - [ ] Sub-tracks w/ expanded/collapsed
 - [ ] Create item instance on demand
-- [ ] Allow multi-directional auto-scroll
 - ... to be continued
 
 ## Done
@@ -45,3 +39,13 @@
 - [x] Timeline overlay
 - [x] Handle abort in mount/unmount
 - [x] Horizontal scroll with mouse wheel
+- [x] Zoom with mouse wheel
+- [x] Zone selection
+  - [x] Show zone selection
+  - [x] Select items
+  - [x] Scroll
+    - [x] Vertical scroll
+    - [x] Horizontal scroll
+  - [x] Position relation to scroll container, should grow with scroll
+- [x] Track overlay
+- [x] Allow multi-directional auto-scroll

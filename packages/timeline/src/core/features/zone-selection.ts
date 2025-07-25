@@ -7,6 +7,7 @@ import {
   XYPosition,
 } from "../types";
 import { computeSpeedMultiplier } from "../utils/auto-scroll.ts";
+import { getTimelinePosition } from "../utils/position.ts";
 
 import { AutoScroll } from "./auto-scroll.ts";
 
@@ -48,20 +49,15 @@ export const ZoneSelectionFeature: TimelineFeature<
       }
 
       element.ownerDocument.body.style.userSelect = "none";
-      const rect = element.getBoundingClientRect();
 
-      const x = event.clientX - rect.left - (api.options.trackHeaderWidth ?? 0);
-      const y =
-        event.clientY -
-        rect.top -
-        (api.options.rulerHeight ?? 0) +
-        element.scrollTop;
-
-      const origin: TimelinePosition = {
-        x,
-        y,
-        time: api._internal.screenToTime(x),
-      };
+      const origin = getTimelinePosition(
+        api,
+        {
+          x: event.clientX,
+          y: event.clientY,
+        },
+        element,
+      );
 
       api.setState((draft) => {
         draft.zoneSelection = {
@@ -118,7 +114,7 @@ export const ZoneSelectionFeature: TimelineFeature<
         const top = Math.min(origin.y, end.y) - element.scrollTop;
         const height = Math.abs(end.y - origin.y);
 
-        const selectedTracksIds = api._internal
+        const selectedTracksIds = api
           .getTracksInRange(
             element.scrollTop + top,
             element.scrollTop + top + height,

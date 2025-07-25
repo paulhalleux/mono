@@ -120,6 +120,7 @@ export function Docs() {
                   <Timeline.TrackHeader className="docs-track-header">
                     {track.top}
                   </Timeline.TrackHeader>
+                  <Timeline.TrackOverlay />
                   <Timeline.TrackView>{renderTrackItem}</Timeline.TrackView>
                 </Timeline.Track>
               ))}

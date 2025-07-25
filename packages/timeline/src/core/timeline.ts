@@ -55,8 +55,6 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     }),
     {
       element: null,
-      trackMap: new Map<string, TimelineTrackInstance>(),
-      itemMap: new Map<string, ItemInstance>(),
     } as TimelineState,
   );
 
@@ -113,19 +111,13 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     trackDef: TrackDef,
     previousTrack: TrackInstance | undefined,
   ): TrackInstance => {
-    const track = features.reduce((previousValue, currentValue) => {
+    return features.reduce((previousValue, currentValue) => {
       return merge(
         {},
         previousValue,
         currentValue.createTrack?.(api, trackDef, previousTrack) ?? {},
       );
     }, trackDef as TrackInstance);
-
-    api.setState((draft) => {
-      draft.trackMap.set(track.id, castDraft(track));
-    });
-
-    return track as TrackInstance;
   };
 
   /**
@@ -149,19 +141,13 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @returns An item instance created from the item definition.
    */
   const createItem = (itemDef: ItemDef): ItemInstance => {
-    const item = features.reduce((previousValue, currentValue) => {
+    return features.reduce((previousValue, currentValue) => {
       return merge(
         {},
         previousValue,
         currentValue.createItem?.(api, itemDef) ?? {},
       );
     }, itemDef as ItemInstance);
-
-    api.setState((draft) => {
-      draft.itemMap.set(item.id, castDraft(item));
-    });
-
-    return item;
   };
 
   /**
@@ -255,8 +241,8 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @returns The track instance with the specified ID, or undefined if not found.
    */
   const getTrackById = (id: string): TrackInstance | undefined => {
-    const { trackMap } = api.store.getState();
-    return trackMap.get(id);
+    const tracks = getTracks();
+    return tracks.find((track) => track.id === id);
   };
 
   /**
@@ -265,8 +251,12 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @returns The item instance with the specified ID, or undefined if not found.
    */
   const getItemById = (id: string): ItemInstance | undefined => {
-    const { itemMap } = api.store.getState();
-    return itemMap.get(id);
+    const itemDef = api.options.items?.find((item) => item.id === id);
+    if (!itemDef) {
+      return undefined;
+    }
+    const track = getTrackById(itemDef.trackId);
+    return track?.getItems().find((item) => item.id === id);
   };
 
   /**

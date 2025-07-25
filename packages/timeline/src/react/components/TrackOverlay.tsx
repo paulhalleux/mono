@@ -4,32 +4,34 @@ import { clsx } from "clsx";
 import { TimelineApi, TimelineState } from "../../core/types.ts";
 import { useTimelineStore } from "../adapter.ts";
 
-import styles from "./TrackHeader.module.css";
+import styles from "./TrackOverlay.module.css";
 
-export type TrackHeaderProps = React.PropsWithChildren &
-  React.ComponentPropsWithoutRef<"div">;
+export type TrackProps = React.ComponentProps<"div">;
 
 const trackHeaderWidthSelector = (_: TimelineState, api: TimelineApi) =>
   api.options.trackHeaderWidth;
+const viewportWidthSelector = (state: TimelineState) =>
+  state.viewportState.viewportWidth;
 
-export const TrackHeader = memo(function TrackHeader({
+export const TrackOverlay = memo(function Track({
   children,
   style,
   className,
   ...rest
-}: TrackHeaderProps) {
+}: TrackProps) {
   const trackHeaderWidth = useTimelineStore(trackHeaderWidthSelector);
-
+  const viewportWidth = useTimelineStore(viewportWidthSelector);
   return (
     <div
+      className={clsx(styles.overlay, className)}
       style={useMemo(
         () => ({
-          width: trackHeaderWidth,
+          left: trackHeaderWidth,
+          width: viewportWidth,
           ...style,
         }),
-        [style, trackHeaderWidth],
+        [style, trackHeaderWidth, viewportWidth],
       )}
-      className={clsx(styles["track-header"], className)}
       {...rest}
     >
       {children}

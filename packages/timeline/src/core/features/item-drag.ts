@@ -1,4 +1,6 @@
-import { TimelineFeature } from "../types";
+import { TimelineFeature, TimelinePosition } from "../types";
+import { createDragDataTransfer } from "../utils/dnd.ts";
+import { getTimelinePosition } from "../utils/position.ts";
 
 export declare namespace ItemDrag {
   export interface Api {}
@@ -9,6 +11,9 @@ export declare namespace ItemDrag {
   export interface State {
     itemDragState?: {
       itemId: string;
+      mouseOrigin: TimelinePosition;
+      mousePosition: TimelinePosition;
+      currentTrackId?: string;
     };
   }
   export interface Events {}
@@ -39,26 +44,74 @@ export const ItemDragFeature: TimelineFeature<
           return;
         }
 
+        const origin = getTimelinePosition(
+          api,
+          {
+            x: event.clientX,
+            y: event.clientY,
+          },
+          element,
+        );
+
         api.setState((draft) => {
-          draft.itemDragState = { itemId };
+          draft.itemDragState = {
+            itemId,
+            mouseOrigin: origin,
+            mousePosition: origin,
+          };
         });
 
         if (!event.dataTransfer) return;
 
-        event.dataTransfer.setData("text/plain", itemId);
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setDragImage(new Image(), 0, 0);
+        createDragDataTransfer(event.dataTransfer, {
+          itemType: "item",
+          data: {
+            itemId,
+            trackId,
+          },
+        });
       },
       {
         signal: abortSignal,
       },
     );
 
-    element.addEventListener(
-      "dragend",
-      () => {
+    const onDragEnd = () => {
+      api.setState((draft) => {
+        draft.itemDragState = undefined;
+      });
+    };
+
+    window.addEventListener("dragend", onDragEnd, {
+      signal: abortSignal,
+    });
+
+    window.addEventListener("drop", onDragEnd, {
+      signal: abortSignal,
+    });
+
+    window.addEventListener(
+      "dragover",
+      (event) => {
+        const { itemDragState } = api.store.getState();
+        if (!itemDragState) return;
+        event.preventDefault();
+
+        const mousePosition = getTimelinePosition(
+          api,
+          {
+            x: event.clientX,
+            y: event.clientY,
+          },
+          element,
+        );
+
         api.setState((draft) => {
-          draft.itemDragState = undefined;
+          if (!draft.itemDragState) return;
+          draft.itemDragState.mousePosition = mousePosition;
+          draft.itemDragState.currentTrackId = api.getTrackAtHeight(
+            mousePosition.y,
+          )?.id;
         });
       },
       {

@@ -86,8 +86,6 @@ export interface TimelineState
     AutoScroll.State,
     ItemDrag.State {
   element: HTMLElement | null;
-  itemMap: Map<string, ItemInstance>;
-  trackMap: Map<string, TrackInstance>;
 }
 
 /**

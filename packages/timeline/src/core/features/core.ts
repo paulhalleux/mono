@@ -49,6 +49,7 @@ export declare namespace Core {
   export interface TrackInstance {
     top: number;
     getItems(): TimelineItemInstance[];
+    getVisibleItems(): TimelineItemInstance[];
     attributes: Record<string, any>;
   }
 
@@ -320,6 +321,9 @@ export const CoreTimelineFeature: TimelineFeature<
         "data-track-id": id,
       },
       getItems: () => {
+        return getItems(id);
+      },
+      getVisibleItems: () => {
         return virtualizeItems(
           getItems(id),
           api.getTimePosition(),

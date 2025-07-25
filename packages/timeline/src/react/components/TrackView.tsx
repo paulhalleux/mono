@@ -34,7 +34,7 @@ export const TrackView = memo(function TrackView({
   const timePositionOffsetPx = useTimelineStore(timePositionOffsetPxSelector);
 
   const track = React.use(TrackProvider);
-  const items = useTimelineStore(() => track?.getItems() || []);
+  const items = useTimelineStore(() => track?.getVisibleItems() || []);
 
   return (
     <div
