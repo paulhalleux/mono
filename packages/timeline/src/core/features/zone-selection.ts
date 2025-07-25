@@ -1,20 +1,21 @@
 import throttle from "lodash/throttle";
 
-import { DrawRect, TimelineFeature, XYPosition } from "../types";
+import {
+  DrawRect,
+  TimelineFeature,
+  TimelinePosition,
+  XYPosition,
+} from "../types";
 import { computeSpeedMultiplier } from "../utils/auto-scroll.ts";
 
 import { AutoScroll } from "./auto-scroll.ts";
 
 export declare namespace ZoneSelection {
-  export interface ZoneSelectionPoint extends XYPosition {
-    time: number;
-  }
-
   export interface State {
     zoneSelection: {
       active: boolean;
-      origin: ZoneSelectionPoint | undefined;
-      end: ZoneSelectionPoint | undefined;
+      origin: TimelinePosition | undefined;
+      end: TimelinePosition | undefined;
       drawRect: DrawRect | undefined;
     };
   }
@@ -56,7 +57,7 @@ export const ZoneSelectionFeature: TimelineFeature<
         (api.options.rulerHeight ?? 0) +
         element.scrollTop;
 
-      const origin: ZoneSelection.ZoneSelectionPoint = {
+      const origin: TimelinePosition = {
         x,
         y,
         time: api._internal.screenToTime(x),
@@ -100,7 +101,7 @@ export const ZoneSelectionFeature: TimelineFeature<
           (api.options.rulerHeight ?? 0) +
           element.scrollTop;
 
-        const end: ZoneSelection.ZoneSelectionPoint = {
+        const end: TimelinePosition = {
           x,
           y,
           time: api._internal.screenToTime(x),

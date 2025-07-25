@@ -6,6 +6,7 @@ import type { Store, StoreBuilder, StoreUpdater } from "../types/store.ts";
 import { AutoScroll } from "./features/auto-scroll.ts";
 import type { Core } from "./features/core.ts";
 import { HorizontalScroll } from "./features/horizontal-scroll.ts";
+import { ItemDrag } from "./features/item-drag.ts";
 import { ItemSelection } from "./features/item-selection.ts";
 import { Ruler } from "./features/ruler.ts";
 import { TrackSelection } from "./features/track-selection.ts";
@@ -47,7 +48,8 @@ export interface ItemDef {
 export interface ItemInstance
   extends ItemDef,
     Core.ItemInstance,
-    ItemSelection.ItemInstance {}
+    ItemSelection.ItemInstance,
+    ItemDrag.ItemInstance {}
 
 /**
  * Internal Timeline options.
@@ -68,7 +70,8 @@ export interface TimelineOptions
     TrackSelection.Options,
     Ruler.Options,
     AutoScroll.Options,
-    HorizontalScroll.Options {}
+    HorizontalScroll.Options,
+    ItemDrag.Options {}
 
 /**
  * Timeline module state.
@@ -80,7 +83,8 @@ export interface TimelineState
     TrackSelection.State,
     Ruler.State,
     ZoneSelection.State,
-    AutoScroll.State {
+    AutoScroll.State,
+    ItemDrag.State {
   element: HTMLElement | null;
 }
 
@@ -92,7 +96,8 @@ export interface TimelineEvents
   extends Core.Events,
     ItemSelection.Events,
     TrackSelection.Events,
-    HorizontalScroll.Events {
+    HorizontalScroll.Events,
+    ItemDrag.Events {
   "element:mounted": { element: HTMLElement; abortSignal: AbortSignal };
   "element:unmounted": void;
 }
@@ -137,7 +142,8 @@ export interface TimelineApi
     ItemSelection.Api,
     TrackSelection.Api,
     AutoScroll.Api,
-    HorizontalScroll.Api {}
+    HorizontalScroll.Api,
+    ItemDrag.Api {}
 
 /**
  * Timeline feature type.
@@ -179,6 +185,10 @@ export type TimelineFeature<
 export type XYPosition = {
   x: number;
   y: number;
+};
+
+export type TimelinePosition = XYPosition & {
+  time: number;
 };
 
 export type DrawRect = {

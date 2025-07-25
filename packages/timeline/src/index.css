@@ -68,6 +68,11 @@
     background: #3593af;
   }
 
+  &.dragging {
+    background: #d1a162 !important;
+    opacity: 0.8;
+  }
+
   &.selected {
     background: #2c7f9b;
 

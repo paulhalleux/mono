@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
 
 import { castDraft, enableMapSet } from "immer";
+import merge from "lodash/merge";
 import StrictEventEmitter from "strict-event-emitter-types";
 
 import { createDefaultStore, createStoreUpdater } from "../utils/store.ts";
@@ -8,6 +9,7 @@ import { createDefaultStore, createStoreUpdater } from "../utils/store.ts";
 import { AutoScrollFeature } from "./features/auto-scroll.ts";
 import { CoreTimelineFeature } from "./features/core.ts";
 import { HorizontalScrollFeature } from "./features/horizontal-scroll.ts";
+import { ItemDragFeature } from "./features/item-drag.ts";
 import { ItemSelectionFeature } from "./features/item-selection.ts";
 import { RulerFeature } from "./features/ruler.ts";
 import { TrackSelectionFeature } from "./features/track-selection.ts";
@@ -37,6 +39,7 @@ const BUILT_IN_FEATURES = [
   AutoScrollFeature,
   HorizontalScrollFeature,
   TrackSelectionFeature,
+  ItemDragFeature,
 ];
 
 export function createTimeline(options: TimelineOptions = {}): TimelineApi {
@@ -107,10 +110,11 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     previousTrack: TrackInstance | undefined,
   ): TrackInstance => {
     return features.reduce((previousValue, currentValue) => {
-      return {
-        ...previousValue,
-        ...(currentValue.createTrack?.(api, trackDef, previousTrack) ?? {}),
-      };
+      return merge(
+        {},
+        previousValue,
+        currentValue.createTrack?.(api, trackDef, previousTrack) ?? {},
+      );
     }, trackDef as TrackInstance);
   };
 
@@ -136,10 +140,11 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    */
   const createItem = (itemDef: ItemDef): ItemInstance => {
     return features.reduce((previousValue, currentValue) => {
-      return {
-        ...previousValue,
-        ...(currentValue.createItem?.(api, itemDef) ?? previousValue),
-      };
+      return merge(
+        {},
+        previousValue,
+        currentValue.createItem?.(api, itemDef) ?? {},
+      );
     }, itemDef as ItemInstance);
   };
 

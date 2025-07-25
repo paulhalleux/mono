@@ -58,6 +58,7 @@ export function Docs() {
         item={item}
         className={clsx("docs-timeline-item", {
           ["selected"]: item.isSelected,
+          ["dragging"]: item.isDragging,
         })}
       >
         {waveform.length > 0 && (
@@ -114,9 +115,7 @@ export function Docs() {
                 <Timeline.Track
                   key={track.id}
                   track={track}
-                  className={clsx("docs-track", {
-                    ["selected"]: track.isSelected,
-                  })}
+                  className="docs-track"
                 >
                   <Timeline.TrackHeader className="docs-track-header">
                     {track.top}
@@ -141,10 +140,11 @@ const Controls = ({
   const timeline = useTimelineApi();
   const timePosition = useTimelineStore((_, api) => api.getTimePosition());
   const viewport = useTimelineStore((st) => st.viewportState);
+  const itemDragState = useTimelineStore((st) => st.itemDragState);
 
   return (
     <>
-      <pre>{JSON.stringify(viewport, null, 2)}</pre>
+      <pre>{JSON.stringify(itemDragState, null, 2)}</pre>
       <input
         type="range"
         min="0"
