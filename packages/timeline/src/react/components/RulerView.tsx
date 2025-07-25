@@ -1,12 +1,12 @@
-import React, { memo, useMemo } from "react";
+import React, { useMemo } from "react";
 import { clsx } from "clsx";
 
 import { TimelineState } from "../../core/types.ts";
 import { useTimelineStore } from "../adapter.ts";
 
-import styles from "./TrackView.module.css";
+import styles from "./RulerView.module.css";
 
-export type TrackViewProps = React.ComponentProps<"div">;
+export type RulerViewProps = React.ComponentProps<"div">;
 
 const viewportWidthSelector = (state: TimelineState) =>
   state.viewportState.viewportWidth;
@@ -15,17 +15,19 @@ const timelineWidthSelector = (state: TimelineState) =>
 const timePositionOffsetPxSelector = (state: TimelineState) =>
   state.viewportState.timePositionOffsetPx;
 
-export const TrackView = memo(function TrackView({
+export function RulerView({
   children,
-  style,
   className,
+  style,
   ...rest
-}: TrackViewProps) {
+}: RulerViewProps) {
   const viewportWidth = useTimelineStore(viewportWidthSelector);
   const timelineWidth = useTimelineStore(timelineWidthSelector);
   const timePositionOffsetPx = useTimelineStore(timePositionOffsetPxSelector);
+
   return (
     <div
+      className={clsx(styles["ruler-ticks"], className)}
       style={useMemo(
         () => ({
           width: viewportWidth,
@@ -33,7 +35,6 @@ export const TrackView = memo(function TrackView({
         }),
         [style, viewportWidth],
       )}
-      className={clsx(styles["track-view"], className)}
       {...rest}
     >
       <div
@@ -41,13 +42,13 @@ export const TrackView = memo(function TrackView({
           () => ({
             transform: `translateX(${timePositionOffsetPx}px)`,
             width: timelineWidth,
+            height: "100%",
           }),
           [timePositionOffsetPx, timelineWidth],
         )}
-        className={styles["translate-container"]}
       >
         {children}
       </div>
     </div>
   );
-});
+}

@@ -108,7 +108,9 @@ export function Docs() {
               <Timeline.RulerHeader className="docs-ruler-header">
                 Header
               </Timeline.RulerHeader>
-              <Timeline.RulerTicks>{renderTick}</Timeline.RulerTicks>
+              <Timeline.RulerView>
+                <Timeline.RulerTicks>{renderTick}</Timeline.RulerTicks>
+              </Timeline.RulerView>
             </Timeline.Ruler>
             <Timeline.Tracks>
               {trackInstances.map((track) => (
@@ -123,7 +125,9 @@ export function Docs() {
                   {track.isDropTarget && (
                     <Timeline.TrackOverlay className="docs-drop-overlay" />
                   )}
-                  <Timeline.TrackView>{renderTrackItem}</Timeline.TrackView>
+                  <Timeline.TrackView>
+                    <Timeline.TrackItems>{renderTrackItem}</Timeline.TrackItems>
+                  </Timeline.TrackView>
                 </Timeline.Track>
               ))}
             </Timeline.Tracks>
