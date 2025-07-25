@@ -53,7 +53,11 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
       ...state,
       ...(feature.getInitialState?.(options) ?? {}),
     }),
-    {} as TimelineState,
+    {
+      element: null,
+      trackMap: new Map<string, TimelineTrackInstance>(),
+      itemMap: new Map<string, ItemInstance>(),
+    } as TimelineState,
   );
 
   const store = options.createStore
@@ -109,13 +113,19 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     trackDef: TrackDef,
     previousTrack: TrackInstance | undefined,
   ): TrackInstance => {
-    return features.reduce((previousValue, currentValue) => {
+    const track = features.reduce((previousValue, currentValue) => {
       return merge(
         {},
         previousValue,
         currentValue.createTrack?.(api, trackDef, previousTrack) ?? {},
       );
     }, trackDef as TrackInstance);
+
+    api.setState((draft) => {
+      draft.trackMap.set(track.id, castDraft(track));
+    });
+
+    return track as TrackInstance;
   };
 
   /**
@@ -139,13 +149,19 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @returns An item instance created from the item definition.
    */
   const createItem = (itemDef: ItemDef): ItemInstance => {
-    return features.reduce((previousValue, currentValue) => {
+    const item = features.reduce((previousValue, currentValue) => {
       return merge(
         {},
         previousValue,
         currentValue.createItem?.(api, itemDef) ?? {},
       );
     }, itemDef as ItemInstance);
+
+    api.setState((draft) => {
+      draft.itemMap.set(item.id, castDraft(item));
+    });
+
+    return item;
   };
 
   /**
@@ -234,6 +250,26 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   };
 
   /**
+   * Gets a track instance by its ID.
+   * @param id The ID of the track.
+   * @returns The track instance with the specified ID, or undefined if not found.
+   */
+  const getTrackById = (id: string): TrackInstance | undefined => {
+    const { trackMap } = api.store.getState();
+    return trackMap.get(id);
+  };
+
+  /**
+   * Gets an item instance by its ID.
+   * @param id The ID of the item.
+   * @returns The item instance with the specified ID, or undefined if not found.
+   */
+  const getItemById = (id: string): ItemInstance | undefined => {
+    const { itemMap } = api.store.getState();
+    return itemMap.get(id);
+  };
+
+  /**
    * Converts a width in pixels to a time in milliseconds based on the current viewport state.
    * @param width The width in pixels.
    * @returns The corresponding time in milliseconds.
@@ -302,8 +338,6 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
       createItem,
       getItemDependencies,
       getTrackDependencies,
-      getTrackAtHeight,
-      getTracksInRange,
       widthToTime,
       timeToWidth,
       timeToLeft,
@@ -313,6 +347,10 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     unmount,
     getTracks,
     getVisibleTracks,
+    getTrackAtHeight,
+    getTracksInRange,
+    getTrackById,
+    getItemById,
   };
 
   let api: TimelineApi = internalApi as TimelineApi;

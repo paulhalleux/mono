@@ -86,6 +86,8 @@ export interface TimelineState
     AutoScroll.State,
     ItemDrag.State {
   element: HTMLElement | null;
+  itemMap: Map<string, ItemInstance>;
+  trackMap: Map<string, TrackInstance>;
 }
 
 /**
@@ -115,6 +117,10 @@ export type InternalTimelineApi = {
   unmount(): void;
   getVisibleTracks(): TrackInstance[];
   getTracks(): TrackInstance[];
+  getTrackById(id: string): TrackInstance | undefined;
+  getItemById(id: string): ItemInstance | undefined;
+  getTrackAtHeight(height: number): TrackInstance | undefined;
+  getTracksInRange(topHeight: number, bottomHeight: number): TrackInstance[];
   _internal: {
     createTrack(
       trackDef: TrackDef,
@@ -123,8 +129,6 @@ export type InternalTimelineApi = {
     createItem(itemDef: ItemDef): ItemInstance;
     getItemDependencies(item: ItemDef, index: number): any[];
     getTrackDependencies(track: TrackDef, index: number): any[];
-    getTrackAtHeight(height: number): TrackInstance | undefined;
-    getTracksInRange(topHeight: number, bottomHeight: number): TrackInstance[];
     widthToTime(width: number): number;
     timeToWidth(time: number): number;
     timeToLeft(time: number): number;
