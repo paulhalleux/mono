@@ -202,11 +202,10 @@ export const CoreTimelineFeature: TimelineFeature<
      */
     const recomputeViewport = () => {
       const { viewportState } = api.store.getState();
-      const { viewportDuration, chunkedPosition } = viewportState;
+      const { chunkedPosition } = viewportState;
 
-      const chunkDuration = viewportDuration * DEFAULT_CHUNK_SIZE;
       const timePositionOffsetPx = -api._internal.timeToLeft(
-        chunkedPosition.index * chunkDuration + chunkedPosition.offset,
+        chunkedPosition.offset,
       );
 
       api.setState((draft) => {

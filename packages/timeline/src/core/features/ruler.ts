@@ -2,7 +2,7 @@ import { TimelineFeature } from "../types";
 import { memoize } from "../utils/memoize.ts";
 import { getTickIntervalTime } from "../utils/ruler.ts";
 
-import { ViewportState } from "./core.ts";
+import { DEFAULT_CHUNK_SIZE, ViewportState } from "./core.ts";
 
 const DEFAULT_MIN_TICK_INTERVAL_WIDTH = 160;
 
@@ -44,6 +44,7 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
         const ticksCount =
           Math.ceil(viewport.viewportDuration / tickIntervalTime) + 1;
 
+        const chunkDuration = viewport.viewportDuration * DEFAULT_CHUNK_SIZE;
         const scrollDelta = Math.floor(
           viewport.chunkedPosition.offset / tickIntervalTime,
         );
@@ -54,7 +55,7 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
           ticks: Array.from({ length: ticksCount }, (_, i) => {
             const time = i * tickIntervalTime + scrollDelta * tickIntervalTime;
             return {
-              time: time,
+              time: time + viewport.chunkedPosition.index * chunkDuration,
               width: tickWidth,
               left: api._internal.timeToLeft(time),
             };

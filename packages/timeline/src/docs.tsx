@@ -139,11 +139,10 @@ const Controls = ({
   const timeline = useTimelineApi();
   const timePosition = useTimelineStore((_, api) => api.getTimePosition());
   const viewport = useTimelineStore((st) => st.viewportState);
-  const zoneSelection = useTimelineStore((st) => st.zoneSelection);
 
   return (
     <>
-      <pre>{JSON.stringify(zoneSelection, null, 2)}</pre>
+      <pre>{JSON.stringify(viewport, null, 2)}</pre>
       <input
         type="range"
         min="0"
