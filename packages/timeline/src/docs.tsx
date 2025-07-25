@@ -27,7 +27,7 @@ const tracks: TrackDef[] = Array.from({ length: 50 }).map((_, i) => ({
 }));
 
 const items: ItemDef[] = tracks.flatMap((track) =>
-  Array.from({ length: 200 })
+  Array.from({ length: 10 })
     .map((_, i) => ({
       id: `${track.id}-item-${i}`,
       start: i * 1000 * 15,
@@ -114,7 +114,9 @@ export function Docs() {
                 <Timeline.Track
                   key={track.id}
                   track={track}
-                  className="docs-track"
+                  className={clsx("docs-track", {
+                    ["selected"]: track.isSelected,
+                  })}
                 >
                   <Timeline.TrackHeader className="docs-track-header">
                     {track.top}

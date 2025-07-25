@@ -31,6 +31,14 @@
 .docs-track {
   background: #2e2e2e;
   border-bottom: 1px solid #222222;
+
+  &.selected::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    outline-offset: -1px;
+    outline: 1px solid rgba(255, 255, 255, 0.75);
+  }
 }
 
 .docs-track-header {

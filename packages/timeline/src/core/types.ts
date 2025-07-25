@@ -8,6 +8,7 @@ import type { Core } from "./features/core.ts";
 import { HorizontalScroll } from "./features/horizontal-scroll.ts";
 import { ItemSelection } from "./features/item-selection.ts";
 import { Ruler } from "./features/ruler.ts";
+import { TrackSelection } from "./features/track-selection.ts";
 import { ZoneSelection } from "./features/zone-selection.ts";
 
 /**
@@ -23,7 +24,10 @@ export interface TrackDef {
  * Track instance.
  * This interface extends the TrackDef and provides additional properties and methods to the tracks.
  */
-export interface TrackInstance extends TrackDef, Core.TrackInstance {}
+export interface TrackInstance
+  extends TrackDef,
+    TrackSelection.TrackInstance,
+    Core.TrackInstance {}
 
 /**
  * Item definition.
@@ -61,6 +65,7 @@ export interface TimelineOptions
   extends InternalTimelineOptions,
     Core.Options,
     ItemSelection.Options,
+    TrackSelection.Options,
     Ruler.Options,
     AutoScroll.Options,
     HorizontalScroll.Options {}
@@ -72,6 +77,7 @@ export interface TimelineOptions
 export interface TimelineState
   extends Core.State,
     ItemSelection.State,
+    TrackSelection.State,
     Ruler.State,
     ZoneSelection.State,
     AutoScroll.State {
@@ -85,6 +91,7 @@ export interface TimelineState
 export interface TimelineEvents
   extends Core.Events,
     ItemSelection.Events,
+    TrackSelection.Events,
     HorizontalScroll.Events {
   "element:mounted": { element: HTMLElement; abortSignal: AbortSignal };
   "element:unmounted": void;
@@ -128,6 +135,7 @@ export interface TimelineApi
   extends InternalTimelineApi,
     Core.Api,
     ItemSelection.Api,
+    TrackSelection.Api,
     AutoScroll.Api,
     HorizontalScroll.Api {}
 

@@ -10,6 +10,7 @@ import { CoreTimelineFeature } from "./features/core.ts";
 import { HorizontalScrollFeature } from "./features/horizontal-scroll.ts";
 import { ItemSelectionFeature } from "./features/item-selection.ts";
 import { RulerFeature } from "./features/ruler.ts";
+import { TrackSelectionFeature } from "./features/track-selection.ts";
 import { ZoneSelectionFeature } from "./features/zone-selection.ts";
 import { memoizeArrayItems } from "./utils/memoize-array.ts";
 import * as ScaleUtils from "./utils/scale.ts";
@@ -35,6 +36,7 @@ const BUILT_IN_FEATURES = [
   ZoneSelectionFeature,
   AutoScrollFeature,
   HorizontalScrollFeature,
+  TrackSelectionFeature,
 ];
 
 export function createTimeline(options: TimelineOptions = {}): TimelineApi {
