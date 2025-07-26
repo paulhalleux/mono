@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 import { clsx } from "clsx";
 
 import { TimelineState } from "../../core/types.ts";
@@ -15,7 +15,7 @@ const timelineWidthSelector = (state: TimelineState) =>
 const timePositionOffsetPxSelector = (state: TimelineState) =>
   state.viewportState.timePositionOffsetPx;
 
-export function RulerView({
+export const RulerView = memo(function RulerView({
   children,
   className,
   style,
@@ -51,4 +51,4 @@ export function RulerView({
       </div>
     </div>
   );
-}
+});

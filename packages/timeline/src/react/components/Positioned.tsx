@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 import { useTimelineStore } from "../adapter.ts";
 
@@ -7,7 +7,7 @@ export type PositionedProps = React.ComponentProps<"div"> & {
   duration?: number;
 };
 
-export function Positioned({
+export const Positioned = memo(function Positioned({
   timeIn,
   duration = 0,
   style,
@@ -32,4 +32,4 @@ export function Positioned({
       {rest.children}
     </div>
   );
-}
+});

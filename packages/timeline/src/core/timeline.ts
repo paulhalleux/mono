@@ -242,8 +242,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @returns The track instance with the specified ID, or undefined if not found.
    */
   const getTrackById = (id: string): TrackInstance | undefined => {
-    const trackList = tracks.get();
-    return trackList.find((track) => track.id === id);
+    return tracks.getCachedById(id);
   };
 
   /**
@@ -257,7 +256,21 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
       return undefined;
     }
     const track = getTrackById(itemDef.trackId);
-    return track?.getItems().find((item) => item.id === id);
+    return track?.getItemById(id);
+  };
+
+  /**
+   * Gets an item instance by its index.
+   * @param trackId The ID of the track to which the item belongs.
+   * @param index The index of the item.
+   * @returns The item instance at the specified index, or undefined if not found.
+   */
+  const getItemByIndex = (
+    trackId: string,
+    index: number,
+  ): ItemInstance | undefined => {
+    const track = getTrackById(trackId);
+    return track?.getItemByIndex(index);
   };
 
   /**
@@ -342,6 +355,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     getTracksInRange,
     getTrackById,
     getItemById,
+    getItemByIndex,
   };
 
   let api: TimelineApi = internalApi as TimelineApi;

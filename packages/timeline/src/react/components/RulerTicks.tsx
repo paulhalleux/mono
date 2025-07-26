@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 import { TimelineState } from "../../core/types.ts";
 import { useTimelineStore } from "../adapter.ts";
@@ -11,7 +11,9 @@ export type RulerTicksProps = {
 
 const ticksSelector = (state: TimelineState) => state.ticks;
 
-export function RulerTicks({ children }: RulerTicksProps) {
+export const RulerTicks = memo(function RulerTicks({
+  children,
+}: RulerTicksProps) {
   const ticks = useTimelineStore(ticksSelector);
 
   return ticks.map((tick) => {
@@ -28,4 +30,4 @@ export function RulerTicks({ children }: RulerTicksProps) {
       </div>
     );
   });
-}
+});

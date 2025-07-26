@@ -9,7 +9,11 @@ export declare namespace ItemDrag {
   export interface Options {}
   export interface State {
     itemDragState?: {
-      itemId: string;
+      item: {
+        id: string;
+        index: number;
+        trackId: string;
+      };
       mouseOrigin: TimelinePosition;
       clientOffset: TimelinePosition;
       mousePosition: TimelinePosition;
@@ -71,7 +75,11 @@ export const ItemDragFeature: TimelineFeature<
 
         api.setState((draft) => {
           draft.itemDragState = {
-            itemId,
+            item: {
+              id: item.id,
+              index: item.index,
+              trackId: item.trackId,
+            },
             mouseOrigin: origin,
             mousePosition: origin,
             clientOffset: {
@@ -108,7 +116,7 @@ export const ItemDragFeature: TimelineFeature<
       if (!itemDragState) return;
 
       api.eventEmitter.emit("item:dragend", {
-        itemId: itemDragState.itemId,
+        itemId: itemDragState.item.id,
         trackId: itemDragState.currentTrackId,
         mousePosition: itemDragState.mousePosition,
         isDropped,
@@ -159,7 +167,7 @@ export const ItemDragFeature: TimelineFeature<
   createItem(api, itemDef) {
     const { itemDragState } = api.store.getState();
     return {
-      isDragging: itemDragState?.itemId === itemDef.id,
+      isDragging: itemDragState?.item.id === itemDef.id,
       attributes: {
         draggable: true,
       },
@@ -167,6 +175,6 @@ export const ItemDragFeature: TimelineFeature<
   },
   itemRecomputeDependencies(api, item) {
     const { itemDragState } = api.store.getState();
-    return [itemDragState?.itemId === item.id];
+    return [itemDragState?.item.id === item.id];
   },
 };

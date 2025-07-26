@@ -28,12 +28,17 @@ const tracks: TrackDef[] = Array.from({ length: 50 }).map((_, i) => ({
 const items: ItemDef[] = tracks.flatMap((track) =>
   Array.from({ length: 10 })
     .map((_, i) => ({
+      index: i,
       id: `${track.id}-item-${i}`,
       start: i * 57983,
       end: (i + 1) * 57983,
       trackId: track.id,
     }))
-    .filter(() => Math.random() > 0.5),
+    .filter(() => Math.random() > 0.5)
+    .map((t, i) => ({
+      ...t,
+      index: i,
+    })),
 );
 
 export function Docs() {
@@ -115,6 +120,7 @@ export function Docs() {
                     {track.top}
                   </Timeline.TrackHeader>
                   <Timeline.TrackView>
+                    <Timeline.MovedItem className="docs-timeline-item moved" />
                     <Timeline.TrackItems>{renderTrackItem}</Timeline.TrackItems>
                   </Timeline.TrackView>
                 </Timeline.Track>
@@ -136,11 +142,11 @@ const Controls = ({
   const timeline = useTimelineApi();
   const timePosition = useTimelineStore((_, api) => api.getTimePosition());
   const viewport = useTimelineStore((st) => st.viewportState);
-  // const itemDragState = useTimelineStore((st) => st.itemDragState);
+  const itemDragState = useTimelineStore((st) => st.itemDragState);
 
   return (
     <>
-      <pre>{JSON.stringify(viewport, null, 2)}</pre>
+      <pre>{JSON.stringify(itemDragState, null, 2)}</pre>
       <input
         type="range"
         min="0"

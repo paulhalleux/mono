@@ -23,7 +23,7 @@ interface MemoizedArrayItemsCache<T> {
  * @param depsFn - Function that returns dependency per item by index and args
  * @param compareItem - Comparator for detecting changes in dependencies
  */
-export function memoizeArrayItems<T, A extends any[]>({
+export function memoizeArrayItems<T extends { id: string }, A extends any[]>({
   itemFactory,
   itemCountFn,
   deps,
@@ -34,6 +34,7 @@ export function memoizeArrayItems<T, A extends any[]>({
   deps: (index: number, args: A) => any;
   compareItem?: ItemComparator;
 }) {
+  const idToIndexMap: Map<string, number> = new Map();
   let cache: MemoizedArrayItemsCache<T> | null = null;
 
   return {
@@ -45,6 +46,7 @@ export function memoizeArrayItems<T, A extends any[]>({
           const value = itemFactory(i, items[i - 1]?.value, args);
           const dep = deps(i, args);
           items.push({ value, dep });
+          idToIndexMap.set(value.id, i);
         }
         cache = { items };
       } else {
@@ -56,11 +58,21 @@ export function memoizeArrayItems<T, A extends any[]>({
               value: newValue,
               dep: newDep,
             };
+            idToIndexMap.set(newValue.id, i);
           }
         }
       }
 
       return cache.items.map((item) => item.value);
+    },
+    getCachedByIndex: (index: number): T | undefined => {
+      if (!cache || index < 0 || index >= cache.items.length) return undefined;
+      return cache.items[index].value;
+    },
+    getCachedById: (id: string): T | undefined => {
+      const index = idToIndexMap.get(id);
+      if (index === undefined) return undefined;
+      return cache?.items[index]?.value;
     },
     refreshItem: (index: number, args: A) => {
       if (!cache) return;

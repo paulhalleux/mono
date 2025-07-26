@@ -37,6 +37,7 @@ export interface TrackInstance
  * This interface defines the structure of an item in the Timeline, including its ID, start and end times, and associated track ID.
  */
 export interface ItemDef {
+  index: number;
   id: string;
   start: number;
   end: number;
@@ -122,6 +123,7 @@ export type InternalTimelineApi = {
   getTracks(): TrackInstance[];
   getTrackById(id: string): TrackInstance | undefined;
   getItemById(id: string): ItemInstance | undefined;
+  getItemByIndex(trackId: string, index: number): ItemInstance | undefined;
   getTrackAtHeight(height: number): TrackInstance | undefined;
   getTracksInRange(topHeight: number, bottomHeight: number): TrackInstance[];
   _internal: {

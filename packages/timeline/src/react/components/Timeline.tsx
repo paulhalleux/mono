@@ -5,6 +5,7 @@ import { TimelineApi } from "../../core/types.ts";
 import { TimelineProvider } from "../adapter.ts";
 
 import { Item } from "./Item.tsx";
+import { MovedItem } from "./MovedItem.tsx";
 import { Overlay } from "./Overlay.tsx";
 import { Positioned } from "./Positioned.tsx";
 import { Ruler } from "./Ruler.tsx";
@@ -58,3 +59,4 @@ Timeline.Overlay = Overlay;
 Timeline.TrackOverlay = TrackOverlay;
 Timeline.TrackItems = TrackItems;
 Timeline.Positioned = Positioned;
+Timeline.MovedItem = MovedItem;
