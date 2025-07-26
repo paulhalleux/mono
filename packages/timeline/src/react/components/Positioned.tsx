@@ -13,10 +13,8 @@ export const Positioned = memo(function Positioned({
   style,
   ...rest
 }: PositionedProps) {
-  const left = useTimelineStore((_, api) => api._internal.timeToLeft(timeIn));
-  const width = useTimelineStore((_, api) =>
-    api._internal.timeToWidth(duration),
-  );
+  const left = useTimelineStore((_, api) => api.timeToLeft(timeIn));
+  const width = useTimelineStore((_, api) => api.timeToWidth(duration));
 
   const itemStyle: React.CSSProperties = React.useMemo(() => {
     return {

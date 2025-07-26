@@ -79,7 +79,7 @@ export const AutoScrollFeature: TimelineFeature<
             top: boundedScrollTop,
           });
         } else if (direction === "left" || direction === "right") {
-          const time = api._internal.widthToTime(
+          const time = api.widthToTime(
             direction === "right" ? additionalPx : -additionalPx,
           );
           api.bendBy(time);

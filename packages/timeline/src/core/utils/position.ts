@@ -13,6 +13,6 @@ export const getTimelinePosition = (
   return {
     x,
     y,
-    time: Math.floor(api._internal.screenToTime(x)),
+    time: Math.floor(api.screenToTime(x)),
   };
 };

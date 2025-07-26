@@ -60,7 +60,7 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
             tickIntervalTime,
         );
 
-        const tickWidth = api._internal.timeToWidth(tickIntervalTime);
+        const tickWidth = api.timeToWidth(tickIntervalTime);
 
         return {
           ticks: Array.from({ length: ticksCount }, (_, i) => {
@@ -68,7 +68,7 @@ export const RulerFeature: TimelineFeature<{}, Ruler.Options, Ruler.State> = {
             return {
               time: time,
               width: tickWidth,
-              left: api._internal.timeToLeft(time),
+              left: api.timeToLeft(time),
             };
           }),
           tickIntervalTime,

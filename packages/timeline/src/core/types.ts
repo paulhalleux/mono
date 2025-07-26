@@ -119,6 +119,10 @@ export type InternalTimelineApi = {
   eventEmitter: StrictEventEmitter<EventEmitter, TimelineEvents>;
   mount(element: HTMLElement): void;
   unmount(): void;
+  widthToTime(width: number): number;
+  timeToWidth(time: number): number;
+  timeToLeft(time: number): number;
+  screenToTime(x: number): number;
   getVisibleTracks(): TrackInstance[];
   getTracks(): TrackInstance[];
   getTrackById(id: string): TrackInstance | undefined;
@@ -134,10 +138,6 @@ export type InternalTimelineApi = {
     createItem(itemDef: ItemDef): ItemInstance;
     getItemDependencies(item: ItemDef, index: number): any[];
     getTrackDependencies(track: TrackDef, index: number): any[];
-    widthToTime(width: number): number;
-    timeToWidth(time: number): number;
-    timeToLeft(time: number): number;
-    screenToTime(x: number): number;
   };
 };
 

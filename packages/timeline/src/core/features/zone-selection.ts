@@ -104,13 +104,13 @@ export const ZoneSelectionFeature: TimelineFeature<
         const end: TimelinePosition = {
           x,
           y,
-          time: api._internal.screenToTime(x),
+          time: api.screenToTime(x),
         };
 
-        const left = api._internal.timeToLeft(
+        const left = api.timeToLeft(
           Math.min(origin.time, end.time) - chunkedPosition.offset,
         );
-        const right = api._internal.timeToLeft(
+        const right = api.timeToLeft(
           Math.max(origin.time, end.time) - chunkedPosition.offset,
         );
         const width = Math.abs(right - left);

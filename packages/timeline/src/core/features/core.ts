@@ -216,7 +216,7 @@ export const CoreTimelineFeature: TimelineFeature<
       const { viewportState } = api.store.getState();
       const { chunkedPosition } = viewportState;
 
-      const timePositionOffsetPx = -api._internal.timeToLeft(
+      const timePositionOffsetPx = -api.timeToLeft(
         chunkedPosition.offset +
           chunkedPosition.index * chunkedPosition.duration,
       );
@@ -280,8 +280,8 @@ export const CoreTimelineFeature: TimelineFeature<
   },
   createItem(api, itemDef) {
     return {
-      leftOffset: api._internal.timeToLeft(itemDef.start),
-      width: api._internal.timeToWidth(itemDef.end - itemDef.start),
+      leftOffset: api.timeToLeft(itemDef.start),
+      width: api.timeToWidth(itemDef.end - itemDef.start),
       duration: itemDef.end - itemDef.start,
       attributes: {
         "data-item-id": itemDef.id,

@@ -87,7 +87,7 @@ export const ItemDragFeature: TimelineFeature<
             mousePosition: origin,
             clientOffset: {
               time: timeOffset,
-              x: api._internal.timeToWidth(timeOffset),
+              x: api.timeToWidth(timeOffset),
               y: 0,
             },
           };
