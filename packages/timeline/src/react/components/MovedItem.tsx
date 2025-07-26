@@ -23,15 +23,18 @@ export const MovedItem = React.memo(function MovedItem({
   const track = React.use(TrackProvider);
 
   const itemDragState = useTimelineStore((state) => state.itemDragState);
+  const trackDropState = useTimelineStore((state) => state.trackDropState);
+
   const item = useTimelineStore((_, api) => {
-    if (!itemDragState || !track) return undefined;
+    if (!itemDragState || !track || itemDragState.type !== "move")
+      return undefined;
     return api.getItemByIndex(
       itemDragState.item.trackId,
       itemDragState.item.index,
     );
   });
 
-  if (!track || !item || !itemDragState) {
+  if (!track || !item || !itemDragState || itemDragState.type !== "move") {
     return null;
   }
 
@@ -41,7 +44,7 @@ export const MovedItem = React.memo(function MovedItem({
   if (
     !isCanDrop ||
     (!isCanSwitchTrack && track.id !== itemDragState.item.trackId) ||
-    (isCanSwitchTrack && itemDragState.currentTrackId !== track.id)
+    (isCanSwitchTrack && trackDropState?.trackId !== track.id)
   ) {
     return null;
   }
@@ -49,9 +52,10 @@ export const MovedItem = React.memo(function MovedItem({
   return (
     <Timeline.Positioned
       className={clsx(styles["moved-item"], className)}
-      timeIn={
-        itemDragState.mousePosition.time - itemDragState.clientOffset.time
-      }
+      timeIn={Math.max(
+        0,
+        itemDragState.mousePosition.time - itemDragState.clientOffset.time,
+      )}
       duration={item.duration}
       {...rest}
     />

@@ -39,12 +39,16 @@ export const ZoneSelectionFeature: TimelineFeature<
   },
   onMount: (api, element, signal) => {
     const onMouseDown = (event: MouseEvent, element: HTMLElement) => {
-      if (event.button !== 0 || event.target === element) return;
       if (
-        event.target instanceof HTMLElement &&
-        event.target.dataset.itemId &&
-        !event.ctrlKey
+        event.button !== 0 ||
+        event.target === element ||
+        !(event.target instanceof HTMLElement)
       ) {
+        return;
+      }
+
+      const closestItem = event.target.closest("[data-item-id]");
+      if ((event.target.dataset.itemId || closestItem) && !event.ctrlKey) {
         return;
       }
 

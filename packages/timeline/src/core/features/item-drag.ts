@@ -1,5 +1,6 @@
 import { TimelineFeature, TimelinePosition } from "../types";
 import { createDragDataTransfer } from "../utils/dnd.ts";
+import { extractItemAndTrackId } from "../utils/event.ts";
 import { getTimelinePosition } from "../utils/position.ts";
 
 export declare namespace ItemDrag {
@@ -9,6 +10,7 @@ export declare namespace ItemDrag {
   export interface Options {}
   export interface State {
     itemDragState?: {
+      type: "move" | "resize";
       item: {
         id: string;
         index: number;
@@ -17,7 +19,6 @@ export declare namespace ItemDrag {
       mouseOrigin: TimelinePosition;
       clientOffset: TimelinePosition;
       mousePosition: TimelinePosition;
-      currentTrackId?: string;
     };
   }
   export interface Events {
@@ -28,7 +29,6 @@ export declare namespace ItemDrag {
     };
     "item:dragend": {
       itemId: string;
-      trackId: string | undefined;
       mousePosition: TimelinePosition;
       isDropped: boolean;
     };
@@ -51,12 +51,7 @@ export const ItemDragFeature: TimelineFeature<
     element.addEventListener(
       "dragstart",
       (event) => {
-        if (!(event.target instanceof HTMLElement)) return;
-        const itemId = event.target.dataset.itemId;
-        const parentTrack = event.target.closest("[data-track-id]");
-        if (!(parentTrack instanceof HTMLElement)) return;
-        const trackId = parentTrack.dataset.trackId;
-
+        const { itemId, trackId } = extractItemAndTrackId(event);
         if (!itemId || !trackId) return;
 
         if (event.ctrlKey) {
@@ -77,8 +72,12 @@ export const ItemDragFeature: TimelineFeature<
         if (!item) return;
         const timeOffset = Math.abs(item.start - origin.time);
 
+        const isResize =
+          event.target instanceof HTMLElement && !!event.target.dataset.resize;
+
         api.setState((draft) => {
           draft.itemDragState = {
+            type: isResize ? "resize" : "move",
             item: {
               id: item.id,
               index: item.index,
@@ -121,7 +120,6 @@ export const ItemDragFeature: TimelineFeature<
 
       api.eventEmitter.emit("item:dragend", {
         itemId: itemDragState.item.id,
-        trackId: itemDragState.currentTrackId,
         mousePosition: itemDragState.mousePosition,
         isDropped,
       });
@@ -158,9 +156,6 @@ export const ItemDragFeature: TimelineFeature<
         api.setState((draft) => {
           if (!draft.itemDragState) return;
           draft.itemDragState.mousePosition = mousePosition;
-          draft.itemDragState.currentTrackId = api.getTrackAtHeight(
-            mousePosition.y,
-          )?.id;
         });
       },
       {

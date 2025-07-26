@@ -15,6 +15,7 @@ import {
   useTimelineApi,
   useTimelineStore,
 } from "./react/adapter.ts";
+import { ResizeHandle } from "./react/components/ResizeHandle.tsx";
 import { Timeline } from "./react/components/Timeline.tsx";
 import { ZoneSelection } from "./react/components/ZoneSelection.tsx";
 
@@ -62,6 +63,7 @@ export function Docs() {
           ["dragging"]: item.isDragging,
         })}
       >
+        <ResizeHandle />
         {waveform.length > 0 && (
           <WaveformComponent
             waveform={waveform}
