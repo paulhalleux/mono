@@ -51,8 +51,12 @@ export const ItemDragFeature: TimelineFeature<
     element.addEventListener(
       "dragstart",
       (event) => {
-        const itemId = (event.target as HTMLElement).dataset.itemId;
-        const trackId = (event.target as HTMLElement).dataset.parentTrackId;
+        if (!(event.target instanceof HTMLElement)) return;
+        const itemId = event.target.dataset.itemId;
+        const parentTrack = event.target.closest("[data-track-id]");
+        if (!(parentTrack instanceof HTMLElement)) return;
+        const trackId = parentTrack.dataset.trackId;
+
         if (!itemId || !trackId) return;
 
         if (event.ctrlKey) {

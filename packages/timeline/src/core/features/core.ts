@@ -285,7 +285,6 @@ export const CoreTimelineFeature: TimelineFeature<
       duration: itemDef.end - itemDef.start,
       attributes: {
         "data-item-id": itemDef.id,
-        "data-parent-track-id": itemDef.trackId,
       },
     };
   },

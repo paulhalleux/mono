@@ -14,6 +14,7 @@ export declare namespace AutoScroll {
   export interface Options {
     autoScrollInterval?: number;
     autoScrollRate?: number;
+    autoScrollOnDragOver?: boolean;
   }
 
   export interface State {
@@ -120,5 +121,40 @@ export const AutoScrollFeature: TimelineFeature<
       startAutoScroll,
       stopAutoScroll,
     };
+  },
+  onMount(api, element, abortSignal) {
+    const { autoScrollOnDragOver = true } = api.options;
+    if (!autoScrollOnDragOver) return;
+
+    element.addEventListener(
+      "dragover",
+      (event) => {
+        const { trackHeaderWidth = 0 } = api.options;
+        if (event.clientX - trackHeaderWidth < 50) {
+          api.startAutoScroll("left");
+        } else if (event.clientX > element.clientWidth - 50) {
+          api.startAutoScroll("right");
+        } else {
+          api.stopAutoScroll("left");
+          api.stopAutoScroll("right");
+        }
+      },
+      {
+        signal: abortSignal,
+      },
+    );
+
+    ["drop", "dragend", "dragleave"].forEach((eventType) => {
+      window.addEventListener(
+        eventType,
+        () => {
+          api.stopAutoScroll("left");
+          api.stopAutoScroll("right");
+        },
+        {
+          signal: abortSignal,
+        },
+      );
+    });
   },
 };

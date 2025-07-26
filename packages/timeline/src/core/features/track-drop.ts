@@ -46,7 +46,6 @@ export const TrackDropFeature: TimelineFeature<
         if (!closestTrack || !(closestTrack instanceof HTMLElement)) return;
         const trackId = closestTrack.dataset.trackId;
         if (!trackId) return;
-        event.preventDefault();
 
         const { trackDropState } = api.store.getState();
         if (trackDropState?.trackId === trackId) return;
