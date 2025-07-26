@@ -46,8 +46,8 @@ export function Docs() {
   const [waveform, setWaveform] = React.useState<number[]>([]);
   const { timeline, timelineRef } = useTimeline({
     trackHeaderWidth,
-    tracks,
-    items,
+    initialTracks: tracks,
+    initialItems: items,
     rulerHeight,
     minTickIntervalWidth: 150,
     minVisibleDuration: 5000,

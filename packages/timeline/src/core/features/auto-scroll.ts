@@ -46,7 +46,7 @@ export const AutoScrollFeature: TimelineFeature<
       direction: AutoScroll.Direction,
       speedMultiplier = 1,
     ) => {
-      const { autoScrollIntervalId, element } = api.store.getState();
+      const { autoScrollIntervalId, element } = api.getState();
       if (!element) {
         return;
       }
@@ -59,7 +59,7 @@ export const AutoScrollFeature: TimelineFeature<
       }
 
       const intervalId = setInterval(() => {
-        const { autoScrollSpeedMultiplier = 1 } = api.store.getState();
+        const { autoScrollSpeedMultiplier = 1 } = api.getState();
         const scrollTop = element.scrollTop;
 
         const additionalPx = autoScrollRate * autoScrollSpeedMultiplier;
@@ -92,7 +92,7 @@ export const AutoScrollFeature: TimelineFeature<
     };
 
     const stopAutoScroll = (direction?: AutoScroll.Direction) => {
-      const { autoScrollIntervalId } = api.store.getState();
+      const { autoScrollIntervalId } = api.getState();
       if (!direction) {
         Object.keys(autoScrollIntervalId).forEach((dir) => {
           const id = autoScrollIntervalId[dir as AutoScroll.Direction];

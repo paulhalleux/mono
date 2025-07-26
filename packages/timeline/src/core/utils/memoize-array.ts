@@ -12,79 +12,57 @@ interface MemoizedItemCache<T> {
 }
 
 interface MemoizedArrayItemsCache<T> {
-  items: MemoizedItemCache<T>[];
+  items: Map<string, MemoizedItemCache<T>>;
 }
 
 /**
- * Fine-grained memoization of an array, allowing each item to be re-created individually.
+ * Fine-grained memoization of an array, allowing each item to be re-created individually, now based on item IDs.
  *
- * @param itemFactory - Function that returns a single item by index and args
- * @param itemCountFn - Function that returns total number of items to memoize
- * @param depsFn - Function that returns dependency per item by index and args
+ * @param itemFactory - Function that returns a single item by ID and previous item in order
+ * @param getIds - Function that returns an array of item IDs in order
+ * @param deps - Function that returns dependency per item by ID and args
  * @param compareItem - Comparator for detecting changes in dependencies
  */
 export function memoizeArrayItems<T extends { id: string }, A extends any[]>({
   itemFactory,
-  itemCountFn,
+  getIds,
   deps,
   compareItem = defaultCompareItem,
 }: {
-  itemFactory: (index: number, prevItem: T | undefined, args: A) => T;
-  itemCountFn: (...args: A) => number;
-  deps: (index: number, args: A) => any;
+  itemFactory: (id: string, prevItemInArray: T | undefined, args: A) => T;
+  getIds: (...args: A) => string[];
+  deps: (id: string, args: A) => any;
   compareItem?: ItemComparator;
 }) {
-  const idToIndexMap: Map<string, number> = new Map();
   let cache: MemoizedArrayItemsCache<T> | null = null;
 
   return {
     get: (...args: A): T[] => {
-      const count = itemCountFn(...args);
-      if (!cache || cache.items.length !== count) {
-        const items: MemoizedItemCache<T>[] = [];
-        for (let i = 0; i < count; i++) {
-          const value = itemFactory(i, items[i - 1]?.value, args);
-          const dep = deps(i, args);
-          items.push({ value, dep });
-          idToIndexMap.set(value.id, i);
+      const ids = getIds(...args);
+      const newItems = new Map<string, MemoizedItemCache<T>>();
+      let prevItemInArray: T | undefined = undefined;
+
+      for (const id of ids) {
+        const prevCache = cache?.items.get(id);
+        const newDep = deps(id, args);
+
+        let value: T;
+        if (!prevCache || !compareItem(prevCache.dep, newDep)) {
+          value = itemFactory(id, prevItemInArray, args);
+        } else {
+          value = prevCache.value;
         }
-        cache = { items };
-      } else {
-        for (let i = 0; i < count; i++) {
-          const newDep = deps(i, args);
-          if (!compareItem(cache.items[i].dep, newDep)) {
-            const newValue = itemFactory(i, cache.items[i - 1]?.value, args);
-            cache.items[i] = {
-              value: newValue,
-              dep: newDep,
-            };
-            idToIndexMap.set(newValue.id, i);
-          }
-        }
+
+        newItems.set(id, { value, dep: newDep });
+        prevItemInArray = value;
       }
 
-      return cache.items.map((item) => item.value);
+      cache = { items: newItems };
+      return ids.map((id) => newItems.get(id)!.value);
     },
-    getCachedByIndex: (index: number): T | undefined => {
-      if (!cache || index < 0 || index >= cache.items.length) return undefined;
-      return cache.items[index].value;
-    },
-    getCachedById: (id: string): T | undefined => {
-      const index = idToIndexMap.get(id);
-      if (index === undefined) return undefined;
-      return cache?.items[index]?.value;
-    },
-    refreshItem: (index: number, args: A) => {
-      if (!cache) return;
-      const count = itemCountFn(...args);
-      if (index < 0 || index >= count) return;
 
-      const newValue = itemFactory(index, cache.items[index - 1]?.value, args);
-      const newDep = deps(index, args);
-      cache.items[index] = {
-        value: newValue,
-        dep: newDep,
-      };
+    getCachedById: (id: string): T | undefined => {
+      return cache?.items.get(id)?.value;
     },
   };
 }

@@ -42,7 +42,7 @@ export const TrackSelectionFeature: TimelineFeature<
   },
   createTimeline: (api) => {
     const isTrackSelected = (trackId: string) => {
-      const { selectedTracks } = api.store.getState();
+      const { selectedTracks } = api.getState();
       return selectedTracks.has(trackId);
     };
 

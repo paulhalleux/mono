@@ -1,8 +1,6 @@
 import {
-  ItemDef,
   ItemInstance as TimelineItemInstance,
   TimelineFeature,
-  TrackDef,
 } from "../types";
 import { memoizeArrayItems } from "../utils/memoize-array.ts";
 import { binarySearchIndex } from "../utils/search.ts";
@@ -49,7 +47,6 @@ export declare namespace Core {
   export interface TrackInstance {
     top: number;
     getItems(): TimelineItemInstance[];
-    getItemByIndex(index: number): TimelineItemInstance | undefined;
     getItemById(id: string): TimelineItemInstance | undefined;
     getVisibleItems(): TimelineItemInstance[];
     attributes: Record<string, any>;
@@ -59,13 +56,10 @@ export declare namespace Core {
     trackHeaderWidth?: number;
     minVisibleDuration?: number;
     maxVisibleDuration?: number;
-    tracks?: TrackDef[];
-    items?: ItemDef[];
     viewportChunkSize?: number;
   }
 
   export interface State {
-    itemsByTrack: Record<string, ItemDef[]>;
     viewportState: ViewportState;
   }
 
@@ -81,7 +75,7 @@ export const CoreTimelineFeature: TimelineFeature<
   Core.TrackInstance,
   Core.ItemInstance
 > = {
-  getInitialState(options) {
+  getInitialState() {
     return {
       viewportState: {
         viewportWidth: 0,
@@ -100,16 +94,6 @@ export const CoreTimelineFeature: TimelineFeature<
           duration: DEFAULT_MIN_VISIBLE_DURATION * DEFAULT_CHUNK_SIZE,
         },
       },
-      itemsByTrack: (options.items ?? []).reduce<Record<string, ItemDef[]>>(
-        (acc, item) => {
-          if (!acc[item.trackId]) {
-            acc[item.trackId] = [];
-          }
-          acc[item.trackId].push(item);
-          return acc;
-        },
-        {},
-      ),
     };
   },
   createTimeline: (api, options) => {
@@ -202,7 +186,7 @@ export const CoreTimelineFeature: TimelineFeature<
      * @returns The current time position in milliseconds.
      */
     const getTimePosition = () => {
-      const { chunkedPosition } = api.store.getState().viewportState;
+      const { chunkedPosition } = api.getState().viewportState;
       const pastChunkDuration =
         chunkedPosition.index * chunkedPosition.duration;
       return pastChunkDuration + chunkedPosition.offset;
@@ -213,7 +197,7 @@ export const CoreTimelineFeature: TimelineFeature<
      * It calculates the time position offset in pixels and updates the viewport state.
      */
     const recomputeViewport = () => {
-      const { viewportState } = api.store.getState();
+      const { viewportState } = api.getState();
       const { chunkedPosition } = viewportState;
 
       const timePositionOffsetPx = -api.timeToLeft(
@@ -289,7 +273,7 @@ export const CoreTimelineFeature: TimelineFeature<
     };
   },
   itemRecomputeDependencies(api, item) {
-    const { viewportState } = api.store.getState();
+    const { viewportState } = api.getState();
     return [
       item,
       viewportState.viewportWidth,
@@ -299,18 +283,25 @@ export const CoreTimelineFeature: TimelineFeature<
   },
   createTrack(api, { id }, previousTrack) {
     const items = memoizeArrayItems<TimelineItemInstance, [trackId: string]>({
-      deps: (index, [trackId]: [trackId: string]) => {
-        const { itemsByTrack } = api.store.getState();
-        const itemDef = itemsByTrack[trackId][index];
-        return api._internal.getItemDependencies(itemDef, index);
+      deps: (id) => {
+        const { itemsById } = api.getState();
+        const itemDef = itemsById.get(id);
+        if (!itemDef) {
+          return [];
+        }
+        return api._internal.getItemDependencies(itemDef);
       },
-      itemFactory: (index, _, [trackId]) => {
-        const item = api.store.getState().itemsByTrack[trackId][index];
+      itemFactory: (id) => {
+        const { itemsById } = api.getState();
+        const item = itemsById.get(id);
+        if (!item) {
+          throw new Error(`Item with id ${id} not found`);
+        }
         return api._internal.createItem(item);
       },
-      itemCountFn: (trackId) => {
-        const items = api.store.getState().itemsByTrack[trackId];
-        return items ? items.length : 0;
+      getIds: (trackId) => {
+        const { itemIdsByTrackId } = api.getState();
+        return itemIdsByTrackId.get(trackId) ?? [];
       },
     });
 
@@ -322,9 +313,6 @@ export const CoreTimelineFeature: TimelineFeature<
       getItems: () => {
         return items.get(id);
       },
-      getItemByIndex: (index: number) => {
-        return items.getCachedByIndex(index);
-      },
       getItemById: (itemId: string) => {
         return items.getCachedById(itemId);
       },
@@ -332,7 +320,7 @@ export const CoreTimelineFeature: TimelineFeature<
         return virtualizeItems(
           items.get(id),
           api.getTimePosition(),
-          api.store.getState().viewportState.viewportDuration,
+          api.getState().viewportState.viewportDuration,
         );
       },
     };
@@ -350,7 +338,7 @@ export const CoreTimelineFeature: TimelineFeature<
 
         event.preventDefault();
 
-        const { viewportState } = api.store.getState();
+        const { viewportState } = api.getState();
         const zoomChange = event.deltaY > 0 ? -0.05 : 0.05;
         const newZoomLevel = Math.max(
           0,

@@ -51,7 +51,7 @@ export const HorizontalScrollFeature: TimelineFeature<
       const scrollByTime =
         0.005 *
         horizontalScrollSpeed *
-        api.store.getState().viewportState.viewportDuration;
+        api.getState().viewportState.viewportDuration;
 
       event.preventDefault();
 

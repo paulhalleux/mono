@@ -43,7 +43,7 @@ export const ItemSelectionFeature: TimelineFeature<
   },
   createTimeline: (api) => {
     const isItemSelected = (itemId: string) => {
-      const { selectedItems } = api.store.getState();
+      const { selectedItems } = api.getState();
       return selectedItems.has(itemId);
     };
 

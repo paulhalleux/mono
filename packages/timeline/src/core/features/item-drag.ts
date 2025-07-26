@@ -115,7 +115,7 @@ export const ItemDragFeature: TimelineFeature<
     );
 
     const onDragEnd = (isDropped: boolean) => {
-      const { itemDragState } = api.store.getState();
+      const { itemDragState } = api.getState();
       if (!itemDragState) return;
 
       api.eventEmitter.emit("item:dragend", {
@@ -140,7 +140,7 @@ export const ItemDragFeature: TimelineFeature<
     window.addEventListener(
       "dragover",
       (event) => {
-        const { itemDragState } = api.store.getState();
+        const { itemDragState } = api.getState();
         if (!itemDragState) return;
         event.preventDefault();
 
@@ -164,7 +164,7 @@ export const ItemDragFeature: TimelineFeature<
     );
   },
   createItem(api, itemDef) {
-    const { itemDragState } = api.store.getState();
+    const { itemDragState } = api.getState();
     return {
       isDragging: itemDragState?.item.id === itemDef.id,
       attributes: {
@@ -173,7 +173,7 @@ export const ItemDragFeature: TimelineFeature<
     };
   },
   itemRecomputeDependencies(api, item) {
-    const { itemDragState } = api.store.getState();
+    const { itemDragState } = api.getState();
     return [itemDragState?.item.id === item.id];
   },
 };

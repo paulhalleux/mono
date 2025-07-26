@@ -60,6 +60,10 @@ export interface ItemInstance
  */
 export type InternalTimelineOptions = {
   createStore?: StoreBuilder<TimelineState>;
+  initialTracks?: TrackDef[];
+  initialItems?: ItemDef[];
+  onTrackChange?: (track: TrackInstance) => void;
+  onItemChange?: (item: ItemInstance) => void;
 };
 
 /**
@@ -91,6 +95,9 @@ export interface TimelineState
     ItemDrag.State,
     TrackDrop.State {
   element: HTMLElement | null;
+  itemIdsByTrackId: Map<string, string[]>;
+  itemsById: Map<string, ItemDef>;
+  tracksById: Map<string, TrackDef>;
 }
 
 /**
@@ -116,6 +123,7 @@ export type InternalTimelineApi = {
   options: TimelineOptions;
   store: Store<TimelineState>;
   setState: StoreUpdater<TimelineState>;
+  getState: () => TimelineState;
   eventEmitter: StrictEventEmitter<EventEmitter, TimelineEvents>;
   mount(element: HTMLElement): void;
   unmount(): void;
@@ -127,7 +135,6 @@ export type InternalTimelineApi = {
   getTracks(): TrackInstance[];
   getTrackById(id: string): TrackInstance | undefined;
   getItemById(id: string): ItemInstance | undefined;
-  getItemByIndex(trackId: string, index: number): ItemInstance | undefined;
   getTrackAtHeight(height: number): TrackInstance | undefined;
   getTracksInRange(topHeight: number, bottomHeight: number): TrackInstance[];
   _internal: {
@@ -136,8 +143,8 @@ export type InternalTimelineApi = {
       previousTrack: TrackInstance | undefined,
     ): TrackInstance;
     createItem(itemDef: ItemDef): ItemInstance;
-    getItemDependencies(item: ItemDef, index: number): any[];
-    getTrackDependencies(track: TrackDef, index: number): any[];
+    getItemDependencies(item: ItemDef): any[];
+    getTrackDependencies(track: TrackDef): any[];
   };
 };
 
@@ -172,16 +179,8 @@ export type TimelineFeature<
     prev: TrackInstance | undefined,
   ): TrackApi;
   createItem?(api: TimelineApi, itemDef: ItemDef): ItemApi;
-  itemRecomputeDependencies?(
-    api: TimelineApi,
-    item: ItemDef,
-    index: number,
-  ): any[];
-  trackRecomputeDependencies?(
-    api: TimelineApi,
-    track: TrackDef,
-    index: number,
-  ): any[];
+  itemRecomputeDependencies?(api: TimelineApi, item: ItemDef): any[];
+  trackRecomputeDependencies?(api: TimelineApi, track: TrackDef): any[];
   onMount?(
     api: TimelineApi,
     element: HTMLElement,

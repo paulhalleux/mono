@@ -81,9 +81,9 @@ export const ZoneSelectionFeature: TimelineFeature<
     const lastClient = { x: 0, y: 0 };
     const onMouseMove = throttle(
       (mousePos: XYPosition | undefined, element: HTMLElement) => {
-        const { active, origin } = api.store.getState().zoneSelection;
+        const { active, origin } = api.getState().zoneSelection;
         if (!active || !origin) return;
-        const { chunkedPosition } = api.store.getState().viewportState;
+        const { chunkedPosition } = api.getState().viewportState;
 
         if (mousePos) {
           lastClient.x = mousePos.x;
@@ -128,7 +128,8 @@ export const ZoneSelectionFeature: TimelineFeature<
         const startTime = Math.min(origin.time, end.time);
         const endTime = Math.max(origin.time, end.time);
 
-        const items = api.options.items?.filter((item) => {
+        const { itemsById } = api.getState();
+        const items = Array.from(itemsById.values()).filter((item) => {
           return (
             selectedTracksIds.includes(item.trackId) &&
             item.start < endTime &&
@@ -201,7 +202,7 @@ export const ZoneSelectionFeature: TimelineFeature<
     element.addEventListener(
       "scroll",
       (ev) => {
-        const { zoneSelection } = api.store.getState();
+        const { zoneSelection } = api.getState();
         if (zoneSelection.active) {
           onMouseMove(undefined, element);
           ev.stopPropagation();
@@ -211,7 +212,7 @@ export const ZoneSelectionFeature: TimelineFeature<
     );
 
     const onBend = () => {
-      const { zoneSelection } = api.store.getState();
+      const { zoneSelection } = api.getState();
       if (zoneSelection.active) {
         onMouseMove(undefined, element);
       }

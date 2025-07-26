@@ -57,6 +57,9 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     }),
     {
       element: null,
+      itemIdsByTrackId: getItemIdsByTrackId(options.initialItems ?? []),
+      itemsById: getItemsById(options.initialItems ?? []),
+      tracksById: getTracksById(options.initialTracks ?? []),
     } as TimelineState,
   );
 
@@ -125,14 +128,13 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   /**
    * Gets the dependencies for a track based on the features defined in the timeline.
    * @param track The track definition.
-   * @param index The index of the track in the timeline.
    * @returns An array of dependencies for the track.
    */
-  const getTrackDependencies = (track: TrackDef, index: number): any[] => {
+  const getTrackDependencies = (track: TrackDef): any[] => {
     return features.reduce((deps, feature) => {
       return [
         ...deps,
-        ...(feature.trackRecomputeDependencies?.(api, track, index) ?? []),
+        ...(feature.trackRecomputeDependencies?.(api, track) ?? []),
       ];
     }, [] as any[]);
   };
@@ -155,14 +157,13 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   /**
    * Gets the dependencies for an item based on the features defined in the timeline.
    * @param item The item definition.
-   * @param index The index of the item in the timeline.
    * @returns An array of dependencies for the item.
    */
-  const getItemDependencies = (item: ItemDef, index: number): any[] => {
+  const getItemDependencies = (item: ItemDef): any[] => {
     return features.reduce((deps, feature) => {
       return [
         ...deps,
-        ...(feature.itemRecomputeDependencies?.(api, item, index) ?? []),
+        ...(feature.itemRecomputeDependencies?.(api, item) ?? []),
       ];
     }, [] as any[]);
   };
@@ -173,19 +174,23 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @returns An array of track instances.
    */
   const tracks = memoizeArrayItems<TimelineTrackInstance, []>({
-    deps: (index) => {
-      const { tracks = [] } = api.options;
-      const trackDef = tracks[index];
+    deps: (id) => {
+      const { tracksById } = api.getState();
+      const trackDef = tracksById.get(id);
       if (!trackDef) {
         return [];
       }
-      return api._internal.getTrackDependencies(trackDef, index);
+      return api._internal.getTrackDependencies(trackDef);
     },
-    itemCountFn: () => options.tracks?.length ?? 0,
-    itemFactory: (index, prev) => {
-      const trackDef = options.tracks?.[index];
+    getIds: () => {
+      const { tracksById } = api.getState();
+      return Array.from(tracksById.keys());
+    },
+    itemFactory: (id, prev) => {
+      const { tracksById } = api.getState();
+      const trackDef = tracksById.get(id);
       if (!trackDef) {
-        throw new Error(`Track definition at index ${index} is undefined`);
+        throw new Error(`Track definition with id "${id}" not found.`);
       }
       return api._internal.createTrack(trackDef, prev);
     },
@@ -199,7 +204,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   const getVisibleTracks = () => {
     const {
       viewportState: { virtualizedTracks },
-    } = api.store.getState();
+    } = api.getState();
     return tracks
       .get()
       .slice(virtualizedTracks.startIndex, virtualizedTracks.endIndex + 1);
@@ -251,26 +256,12 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @returns The item instance with the specified ID, or undefined if not found.
    */
   const getItemById = (id: string): ItemInstance | undefined => {
-    const itemDef = api.options.items?.find((item) => item.id === id);
+    const { itemsById } = api.getState();
+    const itemDef = itemsById.get(id);
     if (!itemDef) {
       return undefined;
     }
-    const track = getTrackById(itemDef.trackId);
-    return track?.getItemById(id);
-  };
-
-  /**
-   * Gets an item instance by its index.
-   * @param trackId The ID of the track to which the item belongs.
-   * @param index The index of the item.
-   * @returns The item instance at the specified index, or undefined if not found.
-   */
-  const getItemByIndex = (
-    trackId: string,
-    index: number,
-  ): ItemInstance | undefined => {
-    const track = getTrackById(trackId);
-    return track?.getItemByIndex(index);
+    return getTrackById(itemDef.trackId)?.getItemById(id);
   };
 
   /**
@@ -281,7 +272,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   const widthToTime = (width: number): number => {
     const {
       viewportState: { viewportWidth, viewportDuration },
-    } = api.store.getState();
+    } = api.getState();
     return ScaleUtils.widthToTime(width, viewportWidth, viewportDuration);
   };
 
@@ -293,7 +284,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   const timeToWidth = (time: number): number => {
     const {
       viewportState: { viewportWidth, viewportDuration },
-    } = api.store.getState();
+    } = api.getState();
     return ScaleUtils.timeToWidth(time, viewportWidth, viewportDuration);
   };
 
@@ -305,7 +296,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   const timeToLeft = (time: number): number => {
     const {
       viewportState: { viewportWidth, viewportDuration, chunkedPosition },
-    } = api.store.getState();
+    } = api.getState();
     const scrollDuration = chunkedPosition.index * chunkedPosition.duration;
     return ScaleUtils.timeToLeft(
       time - scrollDuration,
@@ -324,7 +315,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   const screenToTime = (x: number): number => {
     const {
       viewportState: { viewportWidth, viewportDuration, chunkedPosition },
-    } = api.store.getState();
+    } = api.getState();
     return (
       ScaleUtils.widthToTime(x, viewportWidth, viewportDuration) +
       chunkedPosition.offset +
@@ -336,6 +327,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     store,
     options,
     setState,
+    getState: store.getState,
     eventEmitter,
     _internal: {
       createTrack,
@@ -355,7 +347,6 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     getTracksInRange,
     getTrackById,
     getItemById,
-    getItemByIndex,
   };
 
   let api: TimelineApi = internalApi as TimelineApi;
@@ -365,3 +356,29 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
 
   return api;
 }
+
+const getItemIdsByTrackId = (items: ItemDef[]): Map<string, string[]> => {
+  const itemsByTrackId = new Map<string, string[]>();
+  for (const item of items) {
+    const trackItems = itemsByTrackId.get(item.trackId) || [];
+    trackItems.push(item.id);
+    itemsByTrackId.set(item.trackId, trackItems);
+  }
+  return itemsByTrackId;
+};
+
+const getItemsById = (items: ItemDef[]): Map<string, ItemDef> => {
+  const itemsById = new Map<string, ItemDef>();
+  for (const item of items) {
+    itemsById.set(item.id, item);
+  }
+  return itemsById;
+};
+
+const getTracksById = (tracks: TrackDef[]): Map<string, TrackDef> => {
+  const tracksById = new Map<string, TrackDef>();
+  for (const track of tracks) {
+    tracksById.set(track.id, track);
+  }
+  return tracksById;
+};

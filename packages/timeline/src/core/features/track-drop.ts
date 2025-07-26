@@ -47,7 +47,7 @@ export const TrackDropFeature: TimelineFeature<
         const trackId = closestTrack.dataset.trackId;
         if (!trackId) return;
 
-        const { trackDropState } = api.store.getState();
+        const { trackDropState } = api.getState();
         if (trackDropState?.trackId === trackId) return;
         if (!event.dataTransfer || !isValidDataTransfer(event.dataTransfer)) {
           return;
@@ -73,7 +73,7 @@ export const TrackDropFeature: TimelineFeature<
     element.addEventListener(
       "dragleave",
       () => {
-        const { trackDropState } = api.store.getState();
+        const { trackDropState } = api.getState();
         if (!trackDropState) return;
         api.eventEmitter.emit("track:dragleave", trackDropState);
         api.store.setState({ trackDropState: undefined });
@@ -84,7 +84,7 @@ export const TrackDropFeature: TimelineFeature<
     element.addEventListener(
       "drop",
       () => {
-        const { trackDropState } = api.store.getState();
+        const { trackDropState } = api.getState();
         if (!trackDropState) return;
 
         api.store.setState({ trackDropState: undefined });
@@ -95,13 +95,13 @@ export const TrackDropFeature: TimelineFeature<
     );
   },
   createTrack(api, trackDef) {
-    const { trackDropState } = api.store.getState();
+    const { trackDropState } = api.getState();
     return {
       isDropTarget: trackDropState?.trackId === trackDef.id,
     };
   },
   trackRecomputeDependencies(api, trackDef) {
-    const { trackDropState } = api.store.getState();
+    const { trackDropState } = api.getState();
     return [trackDropState?.trackId === trackDef.id];
   },
 };

@@ -28,10 +28,7 @@ export const MovedItem = React.memo(function MovedItem({
   const item = useTimelineStore((_, api) => {
     if (!itemDragState || !track || itemDragState.type !== "move")
       return undefined;
-    return api.getItemByIndex(
-      itemDragState.item.trackId,
-      itemDragState.item.index,
-    );
+    return api.getItemById(itemDragState.item.id);
   });
 
   if (!track || !item || !itemDragState || itemDragState.type !== "move") {
