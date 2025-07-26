@@ -19,8 +19,22 @@ export const Tracks = memo(function Tracks({
   return (
     <div className={clsx(styles.tracks, className)} {...rest}>
       {trackInstances.map((track) => (
-        <React.Fragment key={track.id}>{children(track)}</React.Fragment>
+        <TrackConsumer key={track} trackId={track}>
+          {children}
+        </TrackConsumer>
       ))}
     </div>
   );
+});
+
+const TrackConsumer = memo(function TrackConsumer({
+  trackId,
+  children,
+}: {
+  children: (track: TrackInstance) => React.ReactNode;
+  trackId: string;
+}) {
+  const track = useTimelineStore((_, api) => api.getTrackById(trackId));
+  if (!track) return null;
+  return children(track);
 });

@@ -1,4 +1,5 @@
 import type { EventEmitter } from "events";
+import { WritableDraft } from "immer";
 import StrictEventEmitter from "strict-event-emitter-types";
 
 import type { Store, StoreBuilder, StoreUpdater } from "../types/store.ts";
@@ -18,6 +19,7 @@ import { ZoneSelection } from "./features/zone-selection.ts";
  * This interface defines the structure of a track in the Timeline, including its ID and height.
  */
 export interface TrackDef {
+  index: number;
   id: string;
   height: number;
 }
@@ -37,7 +39,6 @@ export interface TrackInstance
  * This interface defines the structure of an item in the Timeline, including its ID, start and end times, and associated track ID.
  */
 export interface ItemDef {
-  index: number;
   id: string;
   start: number;
   end: number;
@@ -115,6 +116,10 @@ export interface TimelineEvents
   "element:unmounted": void;
 }
 
+export type AddTrackOptions = {
+  onConflict?: "before" | "after";
+};
+
 /**
  * Internal Timeline API.
  * This type defines the internal API required for the Timeline module to function.
@@ -131,12 +136,24 @@ export type InternalTimelineApi = {
   timeToWidth(time: number): number;
   timeToLeft(time: number): number;
   screenToTime(x: number): number;
-  getVisibleTracks(): TrackInstance[];
+  getVisibleTracks(): string[];
   getTracks(): TrackInstance[];
   getTrackById(id: string): TrackInstance | undefined;
   getItemById(id: string): ItemInstance | undefined;
   getTrackAtHeight(height: number): TrackInstance | undefined;
   getTracksInRange(topHeight: number, bottomHeight: number): TrackInstance[];
+  updateTrack(
+    trackId: string,
+    updater: (track: WritableDraft<TrackDef>) => TrackDef | void,
+  ): void;
+  updateItem(
+    itemId: string,
+    updater: (item: WritableDraft<ItemDef>) => ItemDef | void,
+  ): void;
+  addTrack(trackDef: TrackDef, options?: AddTrackOptions): void;
+  addItem(itemDef: ItemDef): void;
+  removeTrack(trackId: string): void;
+  removeItem(itemId: string): void;
   _internal: {
     createTrack(
       trackDef: TrackDef,

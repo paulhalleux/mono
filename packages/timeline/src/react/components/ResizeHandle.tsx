@@ -1,8 +1,9 @@
+import { memo } from "react";
 import { clsx } from "clsx";
 
 import styles from "./ResizeHandle.module.css";
 
-export const ResizeHandle = () => {
+export const ResizeHandle = memo(() => {
   return (
     <>
       <div
@@ -17,4 +18,4 @@ export const ResizeHandle = () => {
       />
     </>
   );
-};
+});

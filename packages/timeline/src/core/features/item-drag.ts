@@ -13,7 +13,6 @@ export declare namespace ItemDrag {
       type: "move" | "resize";
       item: {
         id: string;
-        index: number;
         trackId: string;
       };
       mouseOrigin: TimelinePosition;
@@ -80,7 +79,6 @@ export const ItemDragFeature: TimelineFeature<
             type: isResize ? "resize" : "move",
             item: {
               id: item.id,
-              index: item.index,
               trackId: item.trackId,
             },
             mouseOrigin: origin,

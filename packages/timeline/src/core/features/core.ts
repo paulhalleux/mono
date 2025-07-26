@@ -1,6 +1,10 @@
+import { WritableDraft } from "immer";
+
 import {
+  ItemDef,
   ItemInstance as TimelineItemInstance,
   TimelineFeature,
+  TrackDef,
 } from "../types";
 import { memoizeArrayItems } from "../utils/memoize-array.ts";
 import { binarySearchIndex } from "../utils/search.ts";
@@ -42,13 +46,15 @@ export declare namespace Core {
     width: number;
     duration: number;
     attributes: Record<string, any>;
+    update(updater: (item: WritableDraft<ItemDef>) => ItemDef | void): void;
   }
 
   export interface TrackInstance {
     top: number;
     getItems(): TimelineItemInstance[];
     getItemById(id: string): TimelineItemInstance | undefined;
-    getVisibleItems(): TimelineItemInstance[];
+    getVisibleItems(): string[];
+    update(updater: (track: WritableDraft<TrackDef>) => TrackDef | void): void;
     attributes: Record<string, any>;
   }
 
@@ -270,12 +276,14 @@ export const CoreTimelineFeature: TimelineFeature<
       attributes: {
         "data-item-id": itemDef.id,
       },
+      update: (updater) => {
+        api.updateItem(itemDef.id, updater);
+      },
     };
   },
-  itemRecomputeDependencies(api, item) {
+  itemRecomputeDependencies(api) {
     const { viewportState } = api.getState();
     return [
-      item,
       viewportState.viewportWidth,
       viewportState.viewportDuration,
       viewportState.chunkedPosition.index,
@@ -323,10 +331,10 @@ export const CoreTimelineFeature: TimelineFeature<
           api.getState().viewportState.viewportDuration,
         );
       },
+      update: (updater) => {
+        api.updateTrack(id, updater);
+      },
     };
-  },
-  trackRecomputeDependencies(_, track) {
-    return [track];
   },
   onMount(api, element, abortSignal) {
     element.addEventListener(
@@ -358,7 +366,7 @@ function virtualizeItems(
   items: TimelineItemInstance[],
   timePosition: number,
   viewportDuration: number,
-): TimelineItemInstance[] {
+): string[] {
   if (items.length === 0) return [];
 
   const startIndex = binarySearchIndex(
@@ -375,5 +383,5 @@ function virtualizeItems(
 
   if (startIndex >= items.length || endIndex < 0) return [];
 
-  return items.slice(startIndex, endIndex + 1);
+  return items.slice(startIndex, endIndex + 1).map((item) => item.id);
 }

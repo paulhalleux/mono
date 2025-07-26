@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 
-import { castDraft, enableMapSet } from "immer";
+import { castDraft, enableMapSet, produce, WritableDraft } from "immer";
 import merge from "lodash/merge";
 import StrictEventEmitter from "strict-event-emitter-types";
 
@@ -18,6 +18,7 @@ import { ZoneSelectionFeature } from "./features/zone-selection.ts";
 import { memoizeArrayItems } from "./utils/memoize-array.ts";
 import * as ScaleUtils from "./utils/scale.ts";
 import {
+  AddTrackOptions,
   InternalTimelineApi,
   ItemDef,
   ItemInstance,
@@ -131,12 +132,16 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @returns An array of dependencies for the track.
    */
   const getTrackDependencies = (track: TrackDef): any[] => {
-    return features.reduce((deps, feature) => {
-      return [
-        ...deps,
-        ...(feature.trackRecomputeDependencies?.(api, track) ?? []),
-      ];
-    }, [] as any[]);
+    return features.reduce(
+      (deps, feature) => {
+        return [
+          ...deps,
+          ...(feature.trackRecomputeDependencies?.(api, track) ?? []),
+        ];
+      },
+      // Track the track itself as a dependency
+      [track] as any[],
+    );
   };
 
   /**
@@ -160,12 +165,16 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @returns An array of dependencies for the item.
    */
   const getItemDependencies = (item: ItemDef): any[] => {
-    return features.reduce((deps, feature) => {
-      return [
-        ...deps,
-        ...(feature.itemRecomputeDependencies?.(api, item) ?? []),
-      ];
-    }, [] as any[]);
+    return features.reduce(
+      (deps, feature) => {
+        return [
+          ...deps,
+          ...(feature.itemRecomputeDependencies?.(api, item) ?? []),
+        ];
+      },
+      // Track the item itself as a dependency
+      [item] as any[],
+    );
   };
 
   /**
@@ -184,7 +193,11 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     },
     getIds: () => {
       const { tracksById } = api.getState();
-      return Array.from(tracksById.keys());
+      return Array.from(tracksById.entries())
+        .toSorted(([, a], [, b]) => {
+          return a.index - b.index;
+        })
+        .map(([id]) => id);
     },
     itemFactory: (id, prev) => {
       const { tracksById } = api.getState();
@@ -206,7 +219,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
       viewportState: { virtualizedTracks },
     } = api.getState();
     return tracks
-      .get()
+      .getIds()
       .slice(virtualizedTracks.startIndex, virtualizedTracks.endIndex + 1);
   };
 
@@ -323,6 +336,167 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     );
   };
 
+  /**
+   * Updates a track in the timeline by applying the updater function to the existing track.
+   * The updater function must return a track with the same ID as the original track.
+   * @param trackId The ID of the track to update.
+   * @param updater The function that updates the track.
+   */
+  const updateTrack = (
+    trackId: string,
+    updater: (track: WritableDraft<TrackDef>) => TrackDef | void,
+  ): void => {
+    const { tracksById } = api.getState();
+    const track = tracksById.get(trackId);
+    if (!track) {
+      throw new Error(`Track with id "${trackId}" not found.`);
+    }
+    const updatedTrack = produce(track, updater);
+    api.setState((draft) => {
+      draft.tracksById.set(updatedTrack.id, updatedTrack);
+    });
+  };
+
+  /**
+   * Updates an item in the timeline by applying the updater function to the existing item.
+   * The updater function must return an item with the same ID as the original item.
+   * @param itemId The ID of the item to update.
+   * @param updater The function that updates the item.
+   */
+  const updateItem = (
+    itemId: string,
+    updater: (item: WritableDraft<ItemDef>) => ItemDef | void,
+  ): void => {
+    const { itemsById } = api.getState();
+    const item = itemsById.get(itemId);
+    if (!item) {
+      throw new Error(`Item with id "${itemId}" not found.`);
+    }
+
+    const updatedItem = produce(item, updater);
+    if (updatedItem.id !== itemId) {
+      throw new Error(
+        `Item updater function must return an item with the same id "${itemId}".`,
+      );
+    }
+
+    api.setState((draft) => {
+      draft.itemsById.set(updatedItem.id, updatedItem);
+    });
+  };
+
+  /**
+   * Removes a track and all associated items from the timeline.
+   * @param trackId The ID of the track to remove.
+   */
+  const removeTrack = (trackId: string): void => {
+    const { tracksById, itemIdsByTrackId } = api.getState();
+    const track = tracksById.get(trackId);
+    if (!track) {
+      throw new Error(`Track with id "${trackId}" not found.`);
+    }
+
+    const itemIds = itemIdsByTrackId.get(trackId) || [];
+    api.setState((draft) => {
+      draft.tracksById.delete(trackId);
+      // Update following tracks' indices (will also trigger re-compute of their instances)
+      draft.tracksById.forEach((t) => {
+        if (t.index > track.index) {
+          t.index -= 1;
+          // TODO: call onTrackChange for each track
+        }
+      });
+
+      // Remove all items associated with the track
+      for (const itemId of itemIds) {
+        draft.itemsById.delete(itemId);
+      }
+      draft.itemIdsByTrackId.delete(trackId);
+    });
+  };
+
+  /**
+   * Removes an item from the timeline.
+   * It also removes the item from its associated track.
+   * @param itemId The ID of the item to remove.
+   */
+  const removeItem = (itemId: string): void => {
+    const { itemsById, itemIdsByTrackId } = api.getState();
+    const item = itemsById.get(itemId);
+    if (!item) {
+      throw new Error(`Item with id "${itemId}" not found.`);
+    }
+
+    // Remove the item from its track
+    const trackItemIds = itemIdsByTrackId.get(item.trackId) || [];
+    const updatedTrackItemIds = trackItemIds.filter((id) => id !== itemId);
+
+    api.setState((draft) => {
+      draft.itemsById.delete(itemId);
+      draft.itemIdsByTrackId.set(item.trackId, updatedTrackItemIds);
+    });
+  };
+
+  /**
+   * Adds a new track to the timeline.
+   * @param trackDef The track definition to add.
+   * @param options Options for adding the track, such as conflict resolution.
+   * @returns The newly created track instance.
+   */
+  const addTrack = (
+    trackDef: TrackDef,
+    options: AddTrackOptions = { onConflict: "before" },
+  ) => {
+    const { tracksById } = api.getState();
+    if (tracksById.has(trackDef.id)) {
+      throw new Error(`Track with id "${trackDef.id}" already exists.`);
+    }
+    api.setState((draft) => {
+      draft.tracksById.set(trackDef.id, trackDef);
+      if (
+        Array.from(draft.tracksById.values()).some(
+          (t) => t.index === trackDef.index,
+        )
+      ) {
+        if (options.onConflict === "before") {
+          draft.tracksById.forEach((track) => {
+            if (track.index >= trackDef.index) {
+              track.index += 1;
+              // TODO: call onTrackChange for each track
+            }
+          });
+        } else if (options.onConflict === "after") {
+          trackDef.index += 1;
+          draft.tracksById.forEach((track) => {
+            if (track.index > trackDef.index) {
+              track.index += 1;
+              // TODO: call onTrackChange for each track
+            }
+          });
+        }
+      }
+    });
+  };
+
+  const addItem = (itemDef: ItemDef) => {
+    const { itemsById, itemIdsByTrackId } = api.getState();
+    if (itemsById.has(itemDef.id)) {
+      throw new Error(`Item with id "${itemDef.id}" already exists.`);
+    }
+    if (!itemIdsByTrackId.has(itemDef.trackId)) {
+      throw new Error(
+        `Track with id "${itemDef.trackId}" does not exist for item "${itemDef.id}".`,
+      );
+    }
+
+    const trackItemIds = itemIdsByTrackId.get(itemDef.trackId) || [];
+    const updatedTrackItemIds = [...trackItemIds, itemDef.id];
+    api.setState((draft) => {
+      draft.itemsById.set(itemDef.id, itemDef);
+      draft.itemIdsByTrackId.set(itemDef.trackId, updatedTrackItemIds);
+    });
+  };
+
   const internalApi: InternalTimelineApi = {
     store,
     options,
@@ -347,6 +521,12 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     getTracksInRange,
     getTrackById,
     getItemById,
+    updateTrack,
+    updateItem,
+    removeTrack,
+    removeItem,
+    addTrack,
+    addItem,
   };
 
   let api: TimelineApi = internalApi as TimelineApi;

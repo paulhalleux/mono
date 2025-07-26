@@ -22,6 +22,7 @@ import { ZoneSelection } from "./react/components/ZoneSelection.tsx";
 const rulerHeight = 32;
 const trackHeaderWidth = 320;
 const tracks: TrackDef[] = Array.from({ length: 50 }).map((_, i) => ({
+  index: i,
   id: `track-${i}`,
   height: 32,
 }));
@@ -29,17 +30,12 @@ const tracks: TrackDef[] = Array.from({ length: 50 }).map((_, i) => ({
 const items: ItemDef[] = tracks.flatMap((track) =>
   Array.from({ length: 10 })
     .map((_, i) => ({
-      index: i,
       id: `${track.id}-item-${i}`,
       start: i * 57983,
       end: (i + 1) * 57983,
       trackId: track.id,
     }))
-    .filter(() => Math.random() > 0.5)
-    .map((t, i) => ({
-      ...t,
-      index: i,
-    })),
+    .filter(() => Math.random() > 0.5),
 );
 
 export function Docs() {
@@ -119,7 +115,13 @@ export function Docs() {
               {(track) => (
                 <Timeline.Track track={track} className="docs-track">
                   <Timeline.TrackHeader className="docs-track-header">
-                    {track.top}
+                    {track.id}
+                    <button
+                      className="docs-track-header-button"
+                      onClick={() => timeline.removeTrack(track.id)}
+                    >
+                      Remove Track
+                    </button>
                   </Timeline.TrackHeader>
                   <Timeline.TrackView>
                     <Timeline.MovedItem className="docs-timeline-item moved" />

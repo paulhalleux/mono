@@ -11,10 +11,6 @@ interface MemoizedItemCache<T> {
   dep: any;
 }
 
-interface MemoizedArrayItemsCache<T> {
-  items: Map<string, MemoizedItemCache<T>>;
-}
-
 /**
  * Fine-grained memoization of an array, allowing each item to be re-created individually, now based on item IDs.
  *
@@ -34,7 +30,7 @@ export function memoizeArrayItems<T extends { id: string }, A extends any[]>({
   deps: (id: string, args: A) => any;
   compareItem?: ItemComparator;
 }) {
-  let cache: MemoizedArrayItemsCache<T> | null = null;
+  let cache: Map<string, MemoizedItemCache<T>> | null = null;
 
   return {
     get: (...args: A): T[] => {
@@ -43,7 +39,7 @@ export function memoizeArrayItems<T extends { id: string }, A extends any[]>({
       let prevItemInArray: T | undefined = undefined;
 
       for (const id of ids) {
-        const prevCache = cache?.items.get(id);
+        const prevCache = cache?.get(id);
         const newDep = deps(id, args);
 
         let value: T;
@@ -57,12 +53,14 @@ export function memoizeArrayItems<T extends { id: string }, A extends any[]>({
         prevItemInArray = value;
       }
 
-      cache = { items: newItems };
+      cache = newItems;
       return ids.map((id) => newItems.get(id)!.value);
     },
-
+    getIds: (...args: A): string[] => {
+      return getIds(...args);
+    },
     getCachedById: (id: string): T | undefined => {
-      return cache?.items.get(id)?.value;
+      return cache?.get(id)?.value;
     },
   };
 }

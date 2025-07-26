@@ -9,7 +9,7 @@ export type TrackItemsProps = {
   children: (item: ItemInstance, track: TrackInstance) => React.ReactNode;
 };
 
-export const TrackItems = memo(function TrackView({
+export const TrackItems = memo(function TrackItems({
   children,
 }: TrackItemsProps) {
   const track = React.use(TrackProvider);
@@ -18,6 +18,18 @@ export const TrackItems = memo(function TrackView({
   if (!track) return null;
 
   return items.map((item) => (
-    <React.Fragment key={item.id}>{children(item, track)}</React.Fragment>
+    <ItemConsumer key={item} itemId={item}>
+      {children}
+    </ItemConsumer>
   ));
+});
+
+const ItemConsumer = memo(function ItemConsumer({
+  itemId,
+  children,
+}: TrackItemsProps & { itemId: string }) {
+  const track = React.use(TrackProvider);
+  const item = useTimelineStore(() => track?.getItemById(itemId));
+  if (!track || !item) return null;
+  return children(item, track);
 });

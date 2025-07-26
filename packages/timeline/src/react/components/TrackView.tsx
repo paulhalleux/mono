@@ -26,6 +26,7 @@ export const TrackView = memo(function TrackView({
   const timePositionOffsetPx = useTimelineStore(timePositionOffsetPxSelector);
   return (
     <div
+      className={clsx(styles["track-view"], className)}
       style={useMemo(
         () => ({
           width: viewportWidth,
@@ -33,10 +34,10 @@ export const TrackView = memo(function TrackView({
         }),
         [style, viewportWidth],
       )}
-      className={clsx(styles["track-view"], className)}
       {...rest}
     >
       <div
+        className={styles["translate-container"]}
         style={useMemo(
           () => ({
             transform: `translateX(${timePositionOffsetPx}px)`,
@@ -44,7 +45,6 @@ export const TrackView = memo(function TrackView({
           }),
           [timePositionOffsetPx, timelineWidth],
         )}
-        className={styles["translate-container"]}
       >
         {children}
       </div>
