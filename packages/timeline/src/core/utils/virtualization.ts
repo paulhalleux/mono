@@ -8,20 +8,21 @@ export function virtualizeItems(
   viewportDuration: number,
 ): string[] {
   if (items.length === 0) return [];
+  const sortedItems = items.toSorted((a, b) => a.start - b.start);
 
   const startIndex = binarySearchIndex(
-    items,
+    sortedItems,
     (item) => item.end > timePosition,
     true,
   );
 
   const endIndex = binarySearchIndex(
-    items,
+    sortedItems,
     (item) => item.start < timePosition + viewportDuration,
     false,
   );
 
-  if (startIndex >= items.length || endIndex < 0) return [];
+  if (startIndex >= sortedItems.length || endIndex < 0) return [];
 
-  return items.slice(startIndex, endIndex + 1).map((item) => item.id);
+  return sortedItems.slice(startIndex, endIndex + 1).map((item) => item.id);
 }

@@ -341,6 +341,7 @@ export const CoreTimelineFeature: TimelineFeature<
         return items.getById(itemId, id);
       },
       getVisibleItems: () => {
+        console.log(items.get(id));
         return virtualizeItems(
           items.get(id),
           api.getTimePosition(),

@@ -17,7 +17,7 @@ import { ZoneSelection } from "./react/components/ZoneSelection.tsx";
 
 const rulerHeight = 32;
 const trackHeaderWidth = 320;
-const tracks: TrackDef[] = Array.from({ length: 50 }).map((_, i) => ({
+const tracks: TrackDef[] = Array.from({ length: 1 }).map((_, i) => ({
   index: i,
   id: `track-${i}`,
   height: 32,
@@ -57,6 +57,7 @@ export function Docs() {
         })}
       >
         <ResizeHandle />
+        {item.id}
         {waveform.length > 0 && (
           <WaveformComponent
             waveform={waveform}
