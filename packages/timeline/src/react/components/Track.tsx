@@ -1,6 +1,5 @@
 import React, { memo, useMemo } from "react";
 import { clsx } from "clsx";
-import isEqual from "lodash/isequal";
 
 import { TrackInstance } from "../../core/types.ts";
 
@@ -11,29 +10,31 @@ export type TrackProps = React.PropsWithChildren<{
 }> &
   React.ComponentPropsWithoutRef<"div">;
 
-export const TrackProvider = React.createContext<TrackInstance | null>(null);
-
-export const Track = memo(
-  function Track({ children, track, style, className, ...rest }: TrackProps) {
-    return (
-      <TrackProvider value={track}>
-        <div
-          style={useMemo(
-            () => ({
-              height: track.height,
-              top: track.top,
-              ...style,
-            }),
-            [style, track.height, track.top],
-          )}
-          className={clsx(styles.track, className)}
-          {...rest}
-          {...track.attributes}
-        >
-          {children}
-        </div>
-      </TrackProvider>
-    );
-  },
-  (prevProps, nextProps) => isEqual(prevProps, nextProps),
-);
+export const TrackProvider = React.createContext<string>("");
+export const Track = memo(function Track({
+  children,
+  track,
+  style,
+  className,
+  ...rest
+}: TrackProps) {
+  return (
+    <TrackProvider value={track.id}>
+      <div
+        style={useMemo(
+          () => ({
+            height: track.height,
+            top: track.top,
+            ...style,
+          }),
+          [style, track.height, track.top],
+        )}
+        className={clsx(styles.track, className)}
+        {...rest}
+        {...track.attributes}
+      >
+        {children}
+      </div>
+    </TrackProvider>
+  );
+});

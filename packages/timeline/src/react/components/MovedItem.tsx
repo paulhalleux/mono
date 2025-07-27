@@ -20,8 +20,9 @@ export const MovedItem = React.memo(function MovedItem({
   canDrop = () => true,
   ...rest
 }: MovedItemProps) {
-  const track = React.use(TrackProvider);
+  const trackId = React.use(TrackProvider);
 
+  const track = useTimelineStore((_, api) => api.getTrackById(trackId));
   const itemDragState = useTimelineStore((state) => state.itemDragState);
   const trackDropState = useTimelineStore((state) => state.trackDropState);
 

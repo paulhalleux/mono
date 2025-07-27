@@ -2,23 +2,23 @@ import isEqual from "lodash/isequal";
 
 type ItemComparator = (prev: any, next: any) => boolean;
 
+type CacheItem<T> = {
+  value: T;
+  dep: any;
+};
+
+type CacheState<T> = Map<string, CacheItem<T>>;
+
+export interface ArrayCache<T> {
+  get: (...args: any[]) => T[];
+  getIds: (...args: any[]) => string[];
+  getById: (id: string, ...args: any[]) => T | undefined;
+}
+
 function defaultCompareItem(prev: any, next: any): boolean {
   return isEqual(prev, next);
 }
 
-interface MemoizedItemCache<T> {
-  value: T;
-  dep: any;
-}
-
-/**
- * Fine-grained memoization of an array, allowing each item to be re-created individually, now based on item IDs.
- *
- * @param itemFactory - Function that returns a single item by ID and previous item in order
- * @param getIds - Function that returns an array of item IDs in order
- * @param deps - Function that returns dependency per item by ID and args
- * @param compareItem - Comparator for detecting changes in dependencies
- */
 export function memoizeArrayItems<T extends { id: string }, A extends any[]>({
   itemFactory,
   getIds,
@@ -29,13 +29,13 @@ export function memoizeArrayItems<T extends { id: string }, A extends any[]>({
   getIds: (...args: A) => string[];
   deps: (id: string, args: A) => any;
   compareItem?: ItemComparator;
-}) {
-  let cache: Map<string, MemoizedItemCache<T>> | null = null;
+}): ArrayCache<T> {
+  let cache: CacheState<T> | null = null;
 
   return {
     get: (...args: A): T[] => {
       const ids = getIds(...args);
-      const newItems = new Map<string, MemoizedItemCache<T>>();
+      const newItems = new Map();
       let prevItemInArray: T | undefined = undefined;
 
       for (const id of ids) {
@@ -59,8 +59,27 @@ export function memoizeArrayItems<T extends { id: string }, A extends any[]>({
     getIds: (...args: A): string[] => {
       return getIds(...args);
     },
-    getCachedById: (id: string): T | undefined => {
-      return cache?.get(id)?.value;
+    getById: (id: string, ...args: A): T | undefined => {
+      const ids = getIds(...args);
+      const index = ids.indexOf(id);
+      if (index === -1) return undefined;
+
+      const prevId = index > 0 ? ids[index - 1] : undefined;
+      const prevItemInArray = prevId ? cache?.get(prevId)?.value : undefined;
+
+      const newDep = deps(id, args);
+      const prevCache = cache?.get(id);
+
+      let value: T;
+      if (!prevCache || !compareItem(prevCache.dep, newDep)) {
+        value = itemFactory(id, prevItemInArray, args);
+        cache ??= new Map(); // Initialize cache if null
+        cache.set(id, { value, dep: newDep });
+      } else {
+        value = prevCache.value;
+      }
+
+      return value;
     },
   };
 }

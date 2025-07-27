@@ -116,12 +116,6 @@ export function Docs() {
                 <Timeline.Track track={track} className="docs-track">
                   <Timeline.TrackHeader className="docs-track-header">
                     {track.id}
-                    <button
-                      className="docs-track-header-button"
-                      onClick={() => timeline.removeTrack(track.id)}
-                    >
-                      Remove Track
-                    </button>
                   </Timeline.TrackHeader>
                   <Timeline.TrackView>
                     <Timeline.MovedItem className="docs-timeline-item moved" />
@@ -146,11 +140,11 @@ const Controls = ({
   const timeline = useTimelineApi();
   const timePosition = useTimelineStore((_, api) => api.getTimePosition());
   const viewport = useTimelineStore((st) => st.viewportState);
-  const itemDragState = useTimelineStore((st) => st.itemDragState);
+  const selectedItems = useTimelineStore((st) => st.selectedItems);
 
   return (
     <>
-      <pre>{JSON.stringify(itemDragState, null, 2)}</pre>
+      <pre>{JSON.stringify(Array.from(selectedItems.values()), null, 2)}</pre>
       <input
         type="range"
         min="0"

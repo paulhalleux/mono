@@ -260,7 +260,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @returns The track instance with the specified ID, or undefined if not found.
    */
   const getTrackById = (id: string): TrackInstance | undefined => {
-    return tracks.getCachedById(id);
+    return tracks.getById(id);
   };
 
   /**

@@ -1,4 +1,5 @@
 import { WritableDraft } from "immer";
+import throttle from "lodash/throttle";
 
 import {
   ItemDef,
@@ -6,8 +7,9 @@ import {
   TimelineFeature,
   TrackDef,
 } from "../types";
-import { memoizeArrayItems } from "../utils/memoize-array.ts";
+import { ArrayCache, memoizeArrayItems } from "../utils/memoize-array.ts";
 import { binarySearchIndex } from "../utils/search.ts";
+import { virtualizeItems } from "../utils/virtualization.ts";
 
 const DEFAULT_TRACK_HEADER_WIDTH = 0;
 const DEFAULT_MIN_VISIBLE_DURATION = 1000 * 10; // 10 seconds
@@ -47,15 +49,17 @@ export declare namespace Core {
     duration: number;
     attributes: Record<string, any>;
     update(updater: (item: WritableDraft<ItemDef>) => ItemDef | void): void;
+    remove(): void;
   }
 
   export interface TrackInstance {
     top: number;
+    attributes: Record<string, any>;
     getItems(): TimelineItemInstance[];
     getItemById(id: string): TimelineItemInstance | undefined;
     getVisibleItems(): string[];
     update(updater: (track: WritableDraft<TrackDef>) => TrackDef | void): void;
-    attributes: Record<string, any>;
+    remove(): void;
   }
 
   export interface Options {
@@ -66,6 +70,7 @@ export declare namespace Core {
   }
 
   export interface State {
+    trackItemCacheById: Map<string, ArrayCache<TimelineItemInstance>>;
     viewportState: ViewportState;
   }
 
@@ -83,6 +88,7 @@ export const CoreTimelineFeature: TimelineFeature<
 > = {
   getInitialState() {
     return {
+      trackItemCacheById: new Map(),
       viewportState: {
         viewportWidth: 0,
         viewportDuration: DEFAULT_MIN_VISIBLE_DURATION,
@@ -279,6 +285,9 @@ export const CoreTimelineFeature: TimelineFeature<
       update: (updater) => {
         api.updateItem(itemDef.id, updater);
       },
+      remove: () => {
+        api.removeItem(itemDef.id);
+      },
     };
   },
   itemRecomputeDependencies(api) {
@@ -290,27 +299,35 @@ export const CoreTimelineFeature: TimelineFeature<
     ];
   },
   createTrack(api, { id }, previousTrack) {
-    const items = memoizeArrayItems<TimelineItemInstance, [trackId: string]>({
-      deps: (id) => {
-        const { itemsById } = api.getState();
-        const itemDef = itemsById.get(id);
-        if (!itemDef) {
-          return [];
-        }
-        return api._internal.getItemDependencies(itemDef);
-      },
-      itemFactory: (id) => {
-        const { itemsById } = api.getState();
-        const item = itemsById.get(id);
-        if (!item) {
-          throw new Error(`Item with id ${id} not found`);
-        }
-        return api._internal.createItem(item);
-      },
-      getIds: (trackId) => {
-        const { itemIdsByTrackId } = api.getState();
-        return itemIdsByTrackId.get(trackId) ?? [];
-      },
+    const { trackItemCacheById } = api.getState();
+    const items =
+      trackItemCacheById.get(id) ??
+      memoizeArrayItems<TimelineItemInstance, [trackId: string]>({
+        deps: (id) => {
+          const { itemsById } = api.getState();
+          const itemDef = itemsById.get(id);
+          if (!itemDef) {
+            return [];
+          }
+          return api._internal.getItemDependencies(itemDef);
+        },
+        itemFactory: (id) => {
+          const { itemsById } = api.getState();
+          const item = itemsById.get(id);
+          if (!item) {
+            throw new Error(`Item with id ${id} not found`);
+          }
+          console.log("Creating item", id, item);
+          return api._internal.createItem(item);
+        },
+        getIds: (trackId) => {
+          const { itemIdsByTrackId } = api.getState();
+          return itemIdsByTrackId.get(trackId) ?? [];
+        },
+      });
+
+    api.setState((draft) => {
+      draft.trackItemCacheById.set(id, items);
     });
 
     return {
@@ -322,7 +339,7 @@ export const CoreTimelineFeature: TimelineFeature<
         return items.get(id);
       },
       getItemById: (itemId: string) => {
-        return items.getCachedById(itemId);
+        return items.getById(itemId, id);
       },
       getVisibleItems: () => {
         return virtualizeItems(
@@ -334,9 +351,23 @@ export const CoreTimelineFeature: TimelineFeature<
       update: (updater) => {
         api.updateTrack(id, updater);
       },
+      remove: () => {
+        api.removeTrack(id);
+      },
     };
   },
   onMount(api, element, abortSignal) {
+    const updateState = throttle((event: WheelEvent) => {
+      const { viewportState } = api.getState();
+      const zoomChange = event.deltaY > 0 ? -0.05 : 0.05;
+      const newZoomLevel = Math.max(
+        0,
+        Math.min(1, viewportState.zoomLevel + zoomChange),
+      );
+
+      api.setZoomLevel(newZoomLevel);
+    }, 1000 / 60);
+
     element.addEventListener(
       "wheel",
       (event) => {
@@ -345,15 +376,7 @@ export const CoreTimelineFeature: TimelineFeature<
         }
 
         event.preventDefault();
-
-        const { viewportState } = api.getState();
-        const zoomChange = event.deltaY > 0 ? -0.05 : 0.05;
-        const newZoomLevel = Math.max(
-          0,
-          Math.min(1, viewportState.zoomLevel + zoomChange),
-        );
-
-        api.setZoomLevel(newZoomLevel);
+        updateState(event);
       },
       {
         signal: abortSignal,
@@ -361,27 +384,3 @@ export const CoreTimelineFeature: TimelineFeature<
     );
   },
 };
-
-function virtualizeItems(
-  items: TimelineItemInstance[],
-  timePosition: number,
-  viewportDuration: number,
-): string[] {
-  if (items.length === 0) return [];
-
-  const startIndex = binarySearchIndex(
-    items,
-    (item) => item.end > timePosition,
-    true,
-  );
-
-  const endIndex = binarySearchIndex(
-    items,
-    (item) => item.start < timePosition + viewportDuration,
-    false,
-  );
-
-  if (startIndex >= items.length || endIndex < 0) return [];
-
-  return items.slice(startIndex, endIndex + 1).map((item) => item.id);
-}

@@ -12,10 +12,10 @@ export type TrackItemsProps = {
 export const TrackItems = memo(function TrackItems({
   children,
 }: TrackItemsProps) {
-  const track = React.use(TrackProvider);
-  const items = useTimelineStore(() => track?.getVisibleItems() || []);
-
-  if (!track) return null;
+  const trackId = React.use(TrackProvider);
+  const items = useTimelineStore(
+    (_, api) => api.getTrackById(trackId)?.getVisibleItems() || [],
+  );
 
   return items.map((item) => (
     <ItemConsumer key={item} itemId={item}>
@@ -28,7 +28,8 @@ const ItemConsumer = memo(function ItemConsumer({
   itemId,
   children,
 }: TrackItemsProps & { itemId: string }) {
-  const track = React.use(TrackProvider);
+  const trackId = React.use(TrackProvider);
+  const track = useTimelineStore((_, api) => api.getTrackById(trackId));
   const item = useTimelineStore(() => track?.getItemById(itemId));
   if (!track || !item) return null;
   return children(item, track);
