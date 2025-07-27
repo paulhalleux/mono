@@ -321,7 +321,7 @@ export const CoreTimelineFeature: TimelineFeature<
         },
         getIds: (trackId) => {
           const { itemIdsByTrackId } = api.getState();
-          return itemIdsByTrackId.get(trackId) ?? [];
+          return Array.from(itemIdsByTrackId.get(trackId)?.values() ?? []);
         },
       });
 

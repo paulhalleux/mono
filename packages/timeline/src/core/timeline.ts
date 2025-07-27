@@ -415,15 +415,16 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     api.setState((draft) => {
       draft.itemsById.set(updatedItem.id, updatedItem);
       if (item.trackId !== updatedItem.trackId) {
-        // If the track has changed, update the itemIdsByTrackId map
-        const trackItemIds = draft.itemIdsByTrackId.get(item.trackId) || [];
-        const updatedTrackItemIds = trackItemIds.filter((id) => id !== itemId);
-        draft.itemIdsByTrackId.set(item.trackId, updatedTrackItemIds);
+        // remove from previous track
+        if (draft.itemIdsByTrackId.has(item.trackId)) {
+          draft.itemIdsByTrackId.get(item.trackId)!.delete(itemId);
+        }
 
-        const newTrackItemIds =
-          draft.itemIdsByTrackId.get(updatedItem.trackId) || [];
-        newTrackItemIds.push(updatedItem.id);
-        draft.itemIdsByTrackId.set(updatedItem.trackId, newTrackItemIds);
+        // add to new track
+        if (!draft.itemIdsByTrackId.has(updatedItem.trackId)) {
+          draft.itemIdsByTrackId.set(updatedItem.trackId, new Set());
+        }
+        draft.itemIdsByTrackId.get(updatedItem.trackId)!.add(updatedItem.id);
       }
     });
 
@@ -466,19 +467,17 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
    * @param itemId The ID of the item to remove.
    */
   const removeItem = (itemId: string): void => {
-    const { itemsById, itemIdsByTrackId } = api.getState();
+    const { itemsById } = api.getState();
     const item = itemsById.get(itemId);
     if (!item) {
       throw new Error(`Item with id "${itemId}" not found.`);
     }
 
-    // Remove the item from its track
-    const trackItemIds = itemIdsByTrackId.get(item.trackId) || [];
-    const updatedTrackItemIds = trackItemIds.filter((id) => id !== itemId);
-
     api.setState((draft) => {
       draft.itemsById.delete(itemId);
-      draft.itemIdsByTrackId.set(item.trackId, updatedTrackItemIds);
+      if (draft.itemIdsByTrackId.has(item.trackId)) {
+        draft.itemIdsByTrackId.get(item.trackId)!.delete(itemId);
+      }
     });
   };
 
@@ -528,17 +527,20 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     if (itemsById.has(itemDef.id)) {
       throw new Error(`Item with id "${itemDef.id}" already exists.`);
     }
+
     if (!itemIdsByTrackId.has(itemDef.trackId)) {
       throw new Error(
         `Track with id "${itemDef.trackId}" does not exist for item "${itemDef.id}".`,
       );
     }
 
-    const trackItemIds = itemIdsByTrackId.get(itemDef.trackId) || [];
-    const updatedTrackItemIds = [...trackItemIds, itemDef.id];
     api.setState((draft) => {
       draft.itemsById.set(itemDef.id, itemDef);
-      draft.itemIdsByTrackId.set(itemDef.trackId, updatedTrackItemIds);
+
+      if (!draft.itemIdsByTrackId.has(itemDef.trackId)) {
+        draft.itemIdsByTrackId.set(itemDef.trackId, new Set());
+      }
+      draft.itemIdsByTrackId.get(itemDef.trackId)!.add(itemDef.id);
     });
   };
 
@@ -583,12 +585,14 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   return api;
 }
 
-const getItemIdsByTrackId = (items: ItemDef[]): Map<string, string[]> => {
-  const itemsByTrackId = new Map<string, string[]>();
+const getItemIdsByTrackId = (items: ItemDef[]): Map<string, Set<string>> => {
+  const itemsByTrackId = new Map<string, Set<string>>();
   for (const item of items) {
-    const trackItems = itemsByTrackId.get(item.trackId) || [];
-    trackItems.push(item.id);
-    itemsByTrackId.set(item.trackId, trackItems);
+    if (!itemsByTrackId.has(item.trackId)) {
+      itemsByTrackId.set(item.trackId, new Set<string>());
+    }
+    const trackItemIds = itemsByTrackId.get(item.trackId)!;
+    trackItemIds.add(item.id);
   }
   return itemsByTrackId;
 };

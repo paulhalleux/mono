@@ -96,7 +96,7 @@ export interface TimelineState
     ItemDrag.State,
     TrackDrop.State {
   element: HTMLElement | null;
-  itemIdsByTrackId: Map<string, string[]>;
+  itemIdsByTrackId: Map<string, Set<string>>;
   itemsById: Map<string, ItemDef>;
   tracksById: Map<string, TrackDef>;
 }
