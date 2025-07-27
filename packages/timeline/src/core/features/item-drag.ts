@@ -19,6 +19,11 @@ export type ResizeDragEvent = {
 
 export type TimelineDragEvent = MoveDragEvent | ResizeDragEvent;
 
+export type Snap = {
+  in?: number;
+  out?: number;
+};
+
 export declare namespace ItemDrag {
   export interface ItemInstance {
     isDragging: boolean;
@@ -37,6 +42,7 @@ export declare namespace ItemDrag {
       mouseOrigin: TimelinePosition;
       clientOffset: TimelinePosition;
       mousePosition: TimelinePosition;
+      snap?: Snap;
     };
   }
   export interface Events {}
@@ -56,17 +62,26 @@ export const ItemDragFeature: TimelineFeature<
   },
   onMount(api, element, abortSignal) {
     const getMoveEvent = (
+      item: ItemInstance,
       mousePosition: TimelinePosition,
       clientOffset: TimelinePosition,
+      snap?: Snap,
     ): MoveDragEvent => ({
       type: "move",
-      timeIn: Math.max(0, mousePosition.time - clientOffset.time),
+      timeIn: snap
+        ? snap.in
+          ? snap.in
+          : snap.out
+            ? snap.out - item.duration
+            : Math.max(0, mousePosition.time - clientOffset.time)
+        : Math.max(0, mousePosition.time - clientOffset.time),
     });
 
     const getResizeEvent = (
       item: ItemInstance,
       mousePosition: TimelinePosition,
       clientOffset: TimelinePosition,
+      snap?: Snap,
     ): ResizeDragEvent => {
       const isResizeLeft = clientOffset.time < item.duration / 2;
       const timeIn = isResizeLeft
@@ -78,6 +93,20 @@ export const ItemDragFeature: TimelineFeature<
       const timeOut = isResizeLeft
         ? item.start + item.duration
         : Math.max(0, mousePosition.time - clientOffset.time + item.duration);
+
+      if (isResizeLeft && snap?.in) {
+        return {
+          type: "resize",
+          timeIn: snap.in,
+          duration: Math.max(0, timeOut - snap.in),
+        };
+      } else if (snap?.out) {
+        return {
+          type: "resize",
+          timeIn: timeIn,
+          duration: Math.max(0, snap.out - timeIn),
+        };
+      }
 
       return {
         type: "resize",
@@ -91,12 +120,13 @@ export const ItemDragFeature: TimelineFeature<
       item: ItemInstance,
       mousePosition: TimelinePosition,
       clientOffset: TimelinePosition,
+      snap?: Snap,
     ): TimelineDragEvent => {
       switch (type) {
         case "move":
-          return getMoveEvent(mousePosition, clientOffset);
+          return getMoveEvent(item, mousePosition, clientOffset, snap);
         case "resize":
-          return getResizeEvent(item, mousePosition, clientOffset);
+          return getResizeEvent(item, mousePosition, clientOffset, snap);
         default:
           throw new Error(`Unknown drag event type: ${type}`);
       }
@@ -223,7 +253,7 @@ export const ItemDragFeature: TimelineFeature<
     );
 
     const onDragOver = throttle((event) => {
-      const { itemDragState } = api.getState();
+      const { itemDragState, ticks, tickIntervalTime } = api.getState();
       if (!itemDragState) return;
 
       const mousePosition = getTimelinePosition(
@@ -238,6 +268,38 @@ export const ItemDragFeature: TimelineFeature<
       const item = api.getItemById(itemDragState.item.id);
       if (!item) return;
 
+      const isResizeRight =
+        itemDragState.event.type === "resize" &&
+        itemDragState.clientOffset.time >= item.duration / 2;
+
+      const timeIn = isResizeRight
+        ? item.start
+        : itemDragState.mousePosition.time - itemDragState.clientOffset.time;
+      const timeOut =
+        itemDragState.mousePosition.time +
+        (item.duration - itemDragState.clientOffset.time);
+
+      const threshold = api.widthToTime(10);
+
+      const adaptedTicks = ticks.map((tick) => ({
+        ...tick,
+        time: tick.time + tickIntervalTime,
+      }));
+
+      const snapIn = !isResizeRight
+        ? adaptedTicks.find((tick) => Math.abs(tick.time - timeIn) <= threshold)
+            ?.time
+        : undefined;
+
+      const snapOut = adaptedTicks.find(
+        (tick) => Math.abs(tick.time - timeOut) <= threshold,
+      )?.time;
+
+      const snap = {
+        in: snapIn,
+        out: snapOut,
+      };
+
       api.setState((draft) => {
         if (!draft.itemDragState) return;
         if (isEqual(mousePosition, draft.itemDragState.mousePosition)) return;
@@ -247,7 +309,9 @@ export const ItemDragFeature: TimelineFeature<
           item,
           mousePosition,
           draft.itemDragState.clientOffset,
+          snap,
         );
+        draft.itemDragState.snap = snap;
       });
     }, 1000 / 30);
 

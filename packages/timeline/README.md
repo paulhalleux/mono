@@ -4,26 +4,30 @@
 ![img_1.png](img_1.png)
 
 ## Todo
-- [ ] Item dragging
 - [ ] Multi-item dragging
 - [ ] Keyboard selection
 - [ ] Zoom origin position
 - [ ] Resizable track header
-- [ ] Dynamic tracks
-- [ ] Dynamic items
 - [ ] Dynamic options (can change at runtime)
 - [ ] Nowline
 - [ ] Playable nowline
 - [ ] Feature flags
 - [ ] Item fetch
-- [ ] Track overlay
-- [ ] Define re-compute dependency in features
 - [ ] Track grouping
 - [ ] Sub-tracks w/ expanded/collapsed
 - [ ] Create item instance on demand
+- [ ] Snapping
+- [ ] Item resizing
+- [ ] Item resizing with snapping
+- [ ] Item to item snapping
+- [ ] Item collision detection
+- [ ] More options to features
 - ... to be continued
 
 ## Done
+- [x] Item dragging
+- [x] Track overlay
+- [x] Define re-compute dependency in features
 - [x] Basic timeline with viewport handling
 - [x] Track header / view separation
 - [x] Item selection / multi-selection
@@ -49,3 +53,5 @@
   - [x] Position relation to scroll container, should grow with scroll
 - [x] Track overlay
 - [x] Allow multi-directional auto-scroll
+- [x] Dynamic tracks
+- [x] Dynamic items

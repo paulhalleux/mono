@@ -15,6 +15,7 @@ const rulerHeightSelector = (_: TimelineState, api: TimelineApi) =>
 export const Overlay = React.memo(function Overlay({ children }: OverlayProps) {
   const trackHeaderWidth = useTimelineStore(trackHeaderWidthSelector);
   const rulerHeight = useTimelineStore(rulerHeightSelector);
+
   return (
     <div
       className={styles.overlay}
@@ -23,7 +24,7 @@ export const Overlay = React.memo(function Overlay({ children }: OverlayProps) {
           top: rulerHeight,
           left: trackHeaderWidth,
           width: "calc(100% - " + trackHeaderWidth + "px)",
-          height: "calc(100% - " + rulerHeight + "px)",
+          height: "100%",
         }),
         [rulerHeight, trackHeaderWidth],
       )}

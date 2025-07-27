@@ -17,7 +17,7 @@ import { ZoneSelection } from "./react/components/ZoneSelection.tsx";
 
 const rulerHeight = 32;
 const trackHeaderWidth = 320;
-const tracks: TrackDef[] = Array.from({ length: 1 }).map((_, i) => ({
+const tracks: TrackDef[] = Array.from({ length: 50 }).map((_, i) => ({
   index: i,
   id: `track-${i}`,
   height: 32,
@@ -98,6 +98,7 @@ export function Docs() {
         </div>
         <Timeline className="docs-box">
           <Timeline.Overlay>
+            <Timeline.SnapLines />
             <ZoneSelection className="docs-zone-selection" />
           </Timeline.Overlay>
           <Timeline.Viewport ref={timelineRef}>
@@ -106,6 +107,7 @@ export function Docs() {
                 Header
               </Timeline.RulerHeader>
               <Timeline.RulerView>
+                <Timeline.SnapIndicators />
                 <Timeline.RulerTicks>{renderTick}</Timeline.RulerTicks>
               </Timeline.RulerView>
             </Timeline.Ruler>
@@ -139,11 +141,11 @@ const Controls = ({
   const timeline = useTimelineApi();
   const timePosition = useTimelineStore((_, api) => api.getTimePosition());
   const viewport = useTimelineStore((st) => st.viewportState);
-  const trackDropState = useTimelineStore((st) => st.trackDropState);
+  const itemDragState = useTimelineStore((st) => st.itemDragState);
 
   return (
     <>
-      <pre>{JSON.stringify(trackDropState, null, 2)}</pre>
+      <pre>{JSON.stringify(itemDragState, null, 2)}</pre>
       <input
         type="range"
         min="0"
