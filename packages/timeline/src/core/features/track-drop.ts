@@ -18,11 +18,7 @@ export declare namespace TrackDrop {
   export interface State {
     trackDropState?: TrackDropState;
   }
-  export interface Events {
-    "track:dragenter": TrackDropState;
-    "track:dragleave": TrackDropState;
-    "track:drop": TimelineDragData;
-  }
+  export interface Events {}
 }
 
 export const TrackDropFeature: TimelineFeature<
@@ -64,8 +60,6 @@ export const TrackDropFeature: TimelineFeature<
         api.store.setState({
           trackDropState: state,
         });
-
-        api.eventEmitter.emit("track:dragenter", state);
       },
       { signal: abortSignal },
     );
@@ -75,21 +69,18 @@ export const TrackDropFeature: TimelineFeature<
       () => {
         const { trackDropState } = api.getState();
         if (!trackDropState) return;
-        api.eventEmitter.emit("track:dragleave", trackDropState);
         api.store.setState({ trackDropState: undefined });
       },
       { signal: abortSignal },
     );
 
-    element.addEventListener(
+    window.addEventListener(
       "drop",
       () => {
         const { trackDropState } = api.getState();
         if (!trackDropState) return;
 
         api.store.setState({ trackDropState: undefined });
-
-        api.eventEmitter.emit("track:drop", trackDropState.draggedData);
       },
       { signal: abortSignal },
     );

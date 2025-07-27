@@ -23,7 +23,10 @@ export declare namespace ItemDrag {
   export interface ItemInstance {
     isDragging: boolean;
   }
-  export interface Options {}
+  export interface Options {
+    onItemMove?: (itemId: string, event: MoveDragEvent) => void;
+    onItemResize?: (itemId: string, event: ResizeDragEvent) => void;
+  }
   export interface State {
     itemDragState?: {
       event: TimelineDragEvent;
@@ -177,41 +180,86 @@ export const ItemDragFeature: TimelineFeature<
       signal: abortSignal,
     });
 
-    window.addEventListener("drop", onDragEnd, {
-      signal: abortSignal,
-    });
+    window.addEventListener(
+      "drop",
+      (ev) => {
+        const { onItemMove, onItemResize } = api.options;
+        const { itemDragState, trackDropState } = api.getState();
+        if (!itemDragState) return;
+        ev.preventDefault();
+
+        switch (itemDragState.event.type) {
+          case "move": {
+            api.updateItem(itemDragState.item.id, (item) => {
+              const duration = item.end - item.start;
+              item.start = itemDragState.event.timeIn;
+              item.end = itemDragState.event.timeIn + duration;
+              item.trackId = trackDropState?.trackId || item.trackId;
+            });
+
+            onItemMove?.(itemDragState.item.id, itemDragState.event);
+            break;
+          }
+          case "resize": {
+            api.updateItem(itemDragState.item.id, (item) => {
+              if (itemDragState.event.type !== "resize") return;
+              item.start = itemDragState.event.timeIn;
+              item.end =
+                itemDragState.event.timeIn + itemDragState.event.duration;
+            });
+
+            onItemResize?.(itemDragState.item.id, itemDragState.event);
+            break;
+          }
+          default:
+            break;
+        }
+
+        onDragEnd();
+      },
+      {
+        signal: abortSignal,
+      },
+    );
+
+    const onDragOver = throttle((event) => {
+      const { itemDragState } = api.getState();
+      if (!itemDragState) return;
+
+      const mousePosition = getTimelinePosition(
+        api,
+        {
+          x: event.clientX,
+          y: event.clientY,
+        },
+        element,
+      );
+
+      const item = api.getItemById(itemDragState.item.id);
+      if (!item) return;
+
+      api.setState((draft) => {
+        if (!draft.itemDragState) return;
+        if (isEqual(mousePosition, draft.itemDragState.mousePosition)) return;
+        draft.itemDragState.mousePosition = mousePosition;
+        draft.itemDragState.event = getEventByType(
+          draft.itemDragState.event.type,
+          item,
+          mousePosition,
+          draft.itemDragState.clientOffset,
+        );
+      });
+    }, 1000 / 30);
 
     window.addEventListener(
       "dragover",
-      throttle((event) => {
+      (event) => {
         const { itemDragState } = api.getState();
         if (!itemDragState) return;
         event.preventDefault();
 
-        const mousePosition = getTimelinePosition(
-          api,
-          {
-            x: event.clientX,
-            y: event.clientY,
-          },
-          element,
-        );
-
-        const item = api.getItemById(itemDragState.item.id);
-        if (!item) return;
-
-        api.setState((draft) => {
-          if (!draft.itemDragState) return;
-          if (isEqual(mousePosition, draft.itemDragState.mousePosition)) return;
-          draft.itemDragState.mousePosition = mousePosition;
-          draft.itemDragState.event = getEventByType(
-            draft.itemDragState.event.type,
-            item,
-            mousePosition,
-            draft.itemDragState.clientOffset,
-          );
-        });
-      }, 1000 / 30),
+        onDragOver(event);
+      },
       {
         signal: abortSignal,
       },

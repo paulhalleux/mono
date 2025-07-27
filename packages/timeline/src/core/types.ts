@@ -63,8 +63,8 @@ export type InternalTimelineOptions = {
   createStore?: StoreBuilder<TimelineState>;
   initialTracks?: TrackDef[];
   initialItems?: ItemDef[];
-  onTrackChange?: (track: TrackInstance) => void;
-  onItemChange?: (item: ItemInstance) => void;
+  onTrackChange?: (track: TrackDef) => void;
+  onItemChange?: (item: ItemDef) => void;
 };
 
 /**
@@ -120,6 +120,12 @@ export type AddTrackOptions = {
   onConflict?: "before" | "after";
 };
 
+export type ElementEvent<K extends keyof HTMLElementEventMap> = {
+  event: K;
+  listener: (event: HTMLElementEventMap[K]) => void;
+  priority?: number;
+};
+
 /**
  * Internal Timeline API.
  * This type defines the internal API required for the Timeline module to function.
@@ -132,6 +138,9 @@ export type InternalTimelineApi = {
   eventEmitter: StrictEventEmitter<EventEmitter, TimelineEvents>;
   mount(element: HTMLElement): void;
   unmount(): void;
+  addElementEventListener<K extends keyof HTMLElementEventMap>(
+    event: ElementEvent<K>,
+  ): void;
   widthToTime(width: number): number;
   timeToWidth(time: number): number;
   timeToLeft(time: number): number;

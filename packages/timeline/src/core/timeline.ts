@@ -1,6 +1,12 @@
 import { EventEmitter } from "events";
 
-import { castDraft, enableMapSet, produce, WritableDraft } from "immer";
+import {
+  castDraft,
+  current,
+  enableMapSet,
+  produce,
+  WritableDraft,
+} from "immer";
 import merge from "lodash/merge";
 import StrictEventEmitter from "strict-event-emitter-types";
 
@@ -19,6 +25,7 @@ import { memoizeArrayItems } from "./utils/memoize-array.ts";
 import * as ScaleUtils from "./utils/scale.ts";
 import {
   AddTrackOptions,
+  ElementEvent,
   InternalTimelineApi,
   ItemDef,
   ItemInstance,
@@ -47,6 +54,7 @@ const BUILT_IN_FEATURES = [
 
 export function createTimeline(options: TimelineOptions = {}): TimelineApi {
   const features = BUILT_IN_FEATURES;
+  let elementEventListeners: Array<ElementEvent<any>> = [];
 
   const eventEmitter: StrictEventEmitter<EventEmitter, TimelineEvents> =
     new EventEmitter();
@@ -86,9 +94,19 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
       abortSignal: abortController.signal,
     });
 
+    elementEventListeners = [];
     features.forEach((feature) => {
       feature.onMount?.(api, element, abortController.signal);
     });
+
+    // add event listeners for the element
+    elementEventListeners
+      .toSorted((a, b) => (a.priority ?? 0) - (b.priority ?? 0))
+      .forEach(({ event, listener }) => {
+        element.addEventListener(event, listener, {
+          signal: abortController.signal,
+        });
+      });
   };
 
   /**
@@ -105,6 +123,12 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     features.forEach((feature) => {
       feature.onUnmount?.(api);
     });
+  };
+
+  const addElementEventListener = <K extends keyof HTMLElementEventMap>(
+    event: ElementEvent<K>,
+  ) => {
+    elementEventListeners.push(event);
   };
 
   /**
@@ -140,7 +164,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
         ];
       },
       // Track the track itself as a dependency
-      [track] as any[],
+      [track, api.getState().itemIdsByTrackId.get(track.id)] as any[],
     );
   };
 
@@ -352,9 +376,17 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
       throw new Error(`Track with id "${trackId}" not found.`);
     }
     const updatedTrack = produce(track, updater);
+    if (updatedTrack.id !== trackId) {
+      throw new Error(
+        `Track updater function must return a track with the same id "${trackId}".`,
+      );
+    }
+
     api.setState((draft) => {
       draft.tracksById.set(updatedTrack.id, updatedTrack);
     });
+
+    api.options.onTrackChange?.(updatedTrack);
   };
 
   /**
@@ -382,7 +414,20 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
 
     api.setState((draft) => {
       draft.itemsById.set(updatedItem.id, updatedItem);
+      if (item.trackId !== updatedItem.trackId) {
+        // If the track has changed, update the itemIdsByTrackId map
+        const trackItemIds = draft.itemIdsByTrackId.get(item.trackId) || [];
+        const updatedTrackItemIds = trackItemIds.filter((id) => id !== itemId);
+        draft.itemIdsByTrackId.set(item.trackId, updatedTrackItemIds);
+
+        const newTrackItemIds =
+          draft.itemIdsByTrackId.get(updatedItem.trackId) || [];
+        newTrackItemIds.push(updatedItem.id);
+        draft.itemIdsByTrackId.set(updatedItem.trackId, newTrackItemIds);
+      }
     });
+
+    api.options.onItemChange?.(updatedItem);
   };
 
   /**
@@ -403,7 +448,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
       draft.tracksById.forEach((t) => {
         if (t.index > track.index) {
           t.index -= 1;
-          // TODO: call onTrackChange for each track
+          api.options.onTrackChange?.(current(t));
         }
       });
 
@@ -462,7 +507,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
           draft.tracksById.forEach((track) => {
             if (track.index >= trackDef.index) {
               track.index += 1;
-              // TODO: call onTrackChange for each track
+              api.options.onTrackChange?.(current(track));
             }
           });
         } else if (options.onConflict === "after") {
@@ -470,7 +515,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
           draft.tracksById.forEach((track) => {
             if (track.index > trackDef.index) {
               track.index += 1;
-              // TODO: call onTrackChange for each track
+              api.options.onTrackChange?.(current(track));
             }
           });
         }
@@ -511,6 +556,7 @@ export function createTimeline(options: TimelineOptions = {}): TimelineApi {
     },
     mount,
     unmount,
+    addElementEventListener,
     widthToTime,
     timeToWidth,
     timeToLeft,

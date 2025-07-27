@@ -36,6 +36,7 @@ const items: ItemDef[] = tracks.flatMap((track) =>
 
 export function Docs() {
   const [waveform, setWaveform] = React.useState<number[]>([]);
+
   const { timeline, timelineRef } = useTimeline({
     trackHeaderWidth,
     initialTracks: tracks,
@@ -137,11 +138,11 @@ const Controls = ({
   const timeline = useTimelineApi();
   const timePosition = useTimelineStore((_, api) => api.getTimePosition());
   const viewport = useTimelineStore((st) => st.viewportState);
-  const itemDragState = useTimelineStore((st) => st.itemDragState);
+  const trackDropState = useTimelineStore((st) => st.trackDropState);
 
   return (
     <>
-      <pre>{JSON.stringify(itemDragState, null, 2)}</pre>
+      <pre>{JSON.stringify(trackDropState, null, 2)}</pre>
       <input
         type="range"
         min="0"

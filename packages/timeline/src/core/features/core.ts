@@ -317,7 +317,6 @@ export const CoreTimelineFeature: TimelineFeature<
           if (!item) {
             throw new Error(`Item with id ${id} not found`);
           }
-          console.log("Creating item", id, item);
           return api._internal.createItem(item);
         },
         getIds: (trackId) => {
