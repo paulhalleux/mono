@@ -8,6 +8,7 @@ import { Item } from "./Item.tsx";
 import { MovedItem } from "./MovedItem.tsx";
 import { Overlay } from "./Overlay.tsx";
 import { Positioned } from "./Positioned.tsx";
+import { ResizedItem } from "./ResizedItem.tsx";
 import { Ruler } from "./Ruler.tsx";
 import { RulerHeader } from "./RulerHeader.tsx";
 import { RulerTicks } from "./RulerTicks.tsx";
@@ -27,12 +28,12 @@ export type TimelineProps = React.PropsWithChildren<{
 }> &
   React.ComponentProps<"div">;
 
-export function Timeline({
+export const Timeline = ({
   children,
   className,
   timeline,
   ...rest
-}: TimelineProps) {
+}: TimelineProps) => {
   const timelineContext = React.use(TimelineProvider);
   const tl = timelineContext || timeline;
   if (!tl) {
@@ -43,7 +44,7 @@ export function Timeline({
       <TimelineProvider value={tl}>{children}</TimelineProvider>
     </div>
   );
-}
+};
 
 Timeline.Tracks = Tracks;
 Timeline.Track = Track;
@@ -60,3 +61,4 @@ Timeline.TrackOverlay = TrackOverlay;
 Timeline.TrackItems = TrackItems;
 Timeline.Positioned = Positioned;
 Timeline.MovedItem = MovedItem;
+Timeline.ResizedItem = ResizedItem;

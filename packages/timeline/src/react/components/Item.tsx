@@ -1,31 +1,29 @@
-import React, { memo } from "react";
+import React from "react";
+import { clsx } from "clsx";
 
 import { ItemInstance } from "../../core/types.ts";
+
+import { Positioned } from "./Positioned.tsx";
+
+import styles from "./Item.module.css";
 
 export type ItemProps = React.PropsWithChildren<{
   item: ItemInstance;
 }> &
   React.ComponentProps<"div">;
 
-export const Item = memo(function Item({
+export const Item = React.memo(function Item({
   children,
   item,
-  style,
+  className,
   onClick,
   ...rest
 }: ItemProps) {
-  const itemStyle: React.CSSProperties = React.useMemo(() => {
-    return {
-      position: "absolute",
-      left: item.leftOffset,
-      width: item.width,
-      ...style,
-    };
-  }, [item.leftOffset, item.width, style]);
-
   return (
-    <div
-      style={itemStyle}
+    <Positioned
+      timeIn={item.start}
+      duration={item.duration}
+      className={clsx(styles.item, className)}
       onClick={React.useCallback(
         (event: React.MouseEvent<HTMLDivElement>) => {
           if (event.ctrlKey) {
@@ -38,10 +36,10 @@ export const Item = memo(function Item({
         [item, onClick],
       )}
       data-item-id={item.id}
-      {...rest}
       {...item.attributes}
+      {...rest}
     >
       {children}
-    </div>
+    </Positioned>
   );
 });

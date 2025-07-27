@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React from "react";
 
 import { useTimelineStore } from "../adapter.ts";
 
@@ -7,7 +7,7 @@ export type PositionedProps = React.ComponentProps<"div"> & {
   duration?: number;
 };
 
-export const Positioned = memo(function Positioned({
+export const Positioned = React.memo(function Positioned({
   timeIn,
   duration = 0,
   style,
@@ -15,10 +15,10 @@ export const Positioned = memo(function Positioned({
 }: PositionedProps) {
   const left = useTimelineStore((_, api) => api.timeToLeft(timeIn));
   const width = useTimelineStore((_, api) => api.timeToWidth(duration));
-
   const itemStyle: React.CSSProperties = React.useMemo(() => {
     return {
       position: "absolute",
+      height: "100%",
       left,
       width,
       ...style,

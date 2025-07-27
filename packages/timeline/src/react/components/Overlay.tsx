@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { useMemo } from "react";
 
 import { TimelineApi, TimelineState } from "../../core/types.ts";
 import { useTimelineStore } from "../adapter.ts";
@@ -12,7 +12,7 @@ const trackHeaderWidthSelector = (_: TimelineState, api: TimelineApi) =>
 const rulerHeightSelector = (_: TimelineState, api: TimelineApi) =>
   api.options.rulerHeight;
 
-export const Overlay = memo(function Overlay({ children }: OverlayProps) {
+export const Overlay = React.memo(function Overlay({ children }: OverlayProps) {
   const trackHeaderWidth = useTimelineStore(trackHeaderWidthSelector);
   const rulerHeight = useTimelineStore(rulerHeightSelector);
   return (

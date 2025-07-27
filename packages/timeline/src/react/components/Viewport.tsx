@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { useMemo } from "react";
 import { clsx } from "clsx";
 
 import { TimelineState } from "../../core/types.ts";
@@ -14,7 +14,7 @@ export type ViewportProps = React.PropsWithChildren<{
 const totalHeightSelector = (state: TimelineState) =>
   state.viewportState.virtualizedTracks.totalHeight;
 
-export const Viewport = memo(function Viewport({
+export const Viewport = React.memo(function Viewport({
   children,
   ref,
   className,

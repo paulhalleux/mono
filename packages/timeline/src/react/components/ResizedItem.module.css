@@ -1,0 +1,5 @@
+.resized-item {
+  z-index: 9;
+  pointer-events: none;
+  overflow: hidden;
+}

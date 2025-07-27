@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React from "react";
 import { clsx } from "clsx";
 
 import { TrackInstance } from "../../core/types.ts";
@@ -10,7 +10,7 @@ export type TracksProps = {
   children: (track: TrackInstance) => React.ReactNode;
 } & Omit<React.ComponentProps<"div">, "children">;
 
-export const Tracks = memo(function Tracks({
+export const Tracks = React.memo(function Tracks({
   children,
   className,
   ...rest
@@ -27,7 +27,7 @@ export const Tracks = memo(function Tracks({
   );
 });
 
-const TrackConsumer = memo(function TrackConsumer({
+const TrackConsumer = React.memo(function TrackConsumer({
   trackId,
   children,
 }: {

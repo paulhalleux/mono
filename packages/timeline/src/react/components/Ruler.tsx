@@ -11,7 +11,12 @@ export type RulerProps = React.PropsWithChildren & React.ComponentProps<"div">;
 const rulerHeightSelector = (_: TimelineState, api: TimelineApi) =>
   api.options.rulerHeight;
 
-export function Ruler({ children, style, className, ...rest }: RulerProps) {
+export const Ruler = React.memo(function Ruler({
+  children,
+  style,
+  className,
+  ...rest
+}: RulerProps) {
   const rulerHeight = useTimelineStore(rulerHeightSelector);
   return (
     <div
@@ -25,4 +30,4 @@ export function Ruler({ children, style, className, ...rest }: RulerProps) {
       {children}
     </div>
   );
-}
+});

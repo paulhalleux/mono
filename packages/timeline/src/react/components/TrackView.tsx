@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { useMemo } from "react";
 import { clsx } from "clsx";
 
 import { TimelineState } from "../../core/types.ts";
@@ -15,7 +15,7 @@ const timelineWidthSelector = (state: TimelineState) =>
 const timePositionOffsetPxSelector = (state: TimelineState) =>
   state.viewportState.timePositionOffsetPx;
 
-export const TrackView = memo(function TrackView({
+export const TrackView = React.memo(function TrackView({
   children,
   style,
   className,

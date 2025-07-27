@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { useMemo } from "react";
 import { clsx } from "clsx";
 
 import { TimelineApi, TimelineState } from "../../core/types.ts";
@@ -12,7 +12,7 @@ export type TrackHeaderProps = React.PropsWithChildren &
 const trackHeaderWidthSelector = (_: TimelineState, api: TimelineApi) =>
   api.options.trackHeaderWidth;
 
-export const TrackHeader = memo(function TrackHeader({
+export const TrackHeader = React.memo(function TrackHeader({
   children,
   style,
   className,

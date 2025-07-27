@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { useMemo } from "react";
 import { clsx } from "clsx";
 
 import { TimelineState } from "../../core/types.ts";
@@ -10,7 +10,7 @@ export type ZoneSelectionProps = React.ComponentProps<"div">;
 
 const zoneSelectionSelector = (state: TimelineState) => state.zoneSelection;
 
-export const ZoneSelection = memo(function ZoneSelection({
+export const ZoneSelection = React.memo(function ZoneSelection({
   children,
   style,
   className,

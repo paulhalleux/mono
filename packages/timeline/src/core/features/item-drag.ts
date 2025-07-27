@@ -1,7 +1,23 @@
-import { TimelineFeature, TimelinePosition } from "../types";
+import isEqual from "lodash/isequal";
+import throttle from "lodash/throttle";
+
+import { ItemInstance, TimelineFeature, TimelinePosition } from "../types";
 import { createDragDataTransfer } from "../utils/dnd.ts";
 import { extractItemAndTrackId } from "../utils/event.ts";
 import { getTimelinePosition } from "../utils/position.ts";
+
+export type MoveDragEvent = {
+  type: "move";
+  timeIn: number;
+};
+
+export type ResizeDragEvent = {
+  type: "resize";
+  timeIn: number;
+  duration: number;
+};
+
+export type TimelineDragEvent = MoveDragEvent | ResizeDragEvent;
 
 export declare namespace ItemDrag {
   export interface ItemInstance {
@@ -10,7 +26,7 @@ export declare namespace ItemDrag {
   export interface Options {}
   export interface State {
     itemDragState?: {
-      type: "move" | "resize";
+      event: TimelineDragEvent;
       item: {
         id: string;
         trackId: string;
@@ -20,18 +36,7 @@ export declare namespace ItemDrag {
       mousePosition: TimelinePosition;
     };
   }
-  export interface Events {
-    "item:dragstart": {
-      itemId: string;
-      trackId: string;
-      mouseOrigin: TimelinePosition;
-    };
-    "item:dragend": {
-      itemId: string;
-      mousePosition: TimelinePosition;
-      isDropped: boolean;
-    };
-  }
+  export interface Events {}
 }
 
 export const ItemDragFeature: TimelineFeature<
@@ -47,6 +52,53 @@ export const ItemDragFeature: TimelineFeature<
     };
   },
   onMount(api, element, abortSignal) {
+    const getMoveEvent = (
+      mousePosition: TimelinePosition,
+      clientOffset: TimelinePosition,
+    ): MoveDragEvent => ({
+      type: "move",
+      timeIn: Math.max(0, mousePosition.time - clientOffset.time),
+    });
+
+    const getResizeEvent = (
+      item: ItemInstance,
+      mousePosition: TimelinePosition,
+      clientOffset: TimelinePosition,
+    ): ResizeDragEvent => {
+      const isResizeLeft = clientOffset.time < item.duration / 2;
+      const timeIn = isResizeLeft
+        ? Math.max(
+            0,
+            Math.min(mousePosition.time - clientOffset.time, item.end),
+          )
+        : item.start;
+      const timeOut = isResizeLeft
+        ? item.start + item.duration
+        : Math.max(0, mousePosition.time - clientOffset.time + item.duration);
+
+      return {
+        type: "resize",
+        timeIn,
+        duration: Math.max(0, timeOut - timeIn),
+      };
+    };
+
+    const getEventByType = (
+      type: "move" | "resize",
+      item: ItemInstance,
+      mousePosition: TimelinePosition,
+      clientOffset: TimelinePosition,
+    ): TimelineDragEvent => {
+      switch (type) {
+        case "move":
+          return getMoveEvent(mousePosition, clientOffset);
+        case "resize":
+          return getResizeEvent(item, mousePosition, clientOffset);
+        default:
+          throw new Error(`Unknown drag event type: ${type}`);
+      }
+    };
+
     element.addEventListener(
       "dragstart",
       (event) => {
@@ -74,20 +126,27 @@ export const ItemDragFeature: TimelineFeature<
         const isResize =
           event.target instanceof HTMLElement && !!event.target.dataset.resize;
 
+        const clientOffset = {
+          time: timeOffset,
+          x: api.timeToWidth(timeOffset),
+          y: 0,
+        };
+
         api.setState((draft) => {
           draft.itemDragState = {
-            type: isResize ? "resize" : "move",
+            event: getEventByType(
+              isResize ? "resize" : "move",
+              item,
+              origin,
+              clientOffset,
+            ),
             item: {
               id: item.id,
               trackId: item.trackId,
             },
             mouseOrigin: origin,
             mousePosition: origin,
-            clientOffset: {
-              time: timeOffset,
-              x: api.timeToWidth(timeOffset),
-              y: 0,
-            },
+            clientOffset,
           };
         });
 
@@ -100,44 +159,31 @@ export const ItemDragFeature: TimelineFeature<
             trackId,
           },
         });
-
-        api.eventEmitter.emit("item:dragstart", {
-          itemId,
-          trackId,
-          mouseOrigin: origin,
-        });
       },
       {
         signal: abortSignal,
       },
     );
 
-    const onDragEnd = (isDropped: boolean) => {
+    const onDragEnd = () => {
       const { itemDragState } = api.getState();
       if (!itemDragState) return;
-
-      api.eventEmitter.emit("item:dragend", {
-        itemId: itemDragState.item.id,
-        mousePosition: itemDragState.mousePosition,
-        isDropped,
-      });
-
       api.setState((draft) => {
         draft.itemDragState = undefined;
       });
     };
 
-    window.addEventListener("dragend", () => onDragEnd(false), {
+    window.addEventListener("dragend", onDragEnd, {
       signal: abortSignal,
     });
 
-    window.addEventListener("drop", () => onDragEnd(true), {
+    window.addEventListener("drop", onDragEnd, {
       signal: abortSignal,
     });
 
     window.addEventListener(
       "dragover",
-      (event) => {
+      throttle((event) => {
         const { itemDragState } = api.getState();
         if (!itemDragState) return;
         event.preventDefault();
@@ -151,11 +197,21 @@ export const ItemDragFeature: TimelineFeature<
           element,
         );
 
+        const item = api.getItemById(itemDragState.item.id);
+        if (!item) return;
+
         api.setState((draft) => {
           if (!draft.itemDragState) return;
+          if (isEqual(mousePosition, draft.itemDragState.mousePosition)) return;
           draft.itemDragState.mousePosition = mousePosition;
+          draft.itemDragState.event = getEventByType(
+            draft.itemDragState.event.type,
+            item,
+            mousePosition,
+            draft.itemDragState.clientOffset,
+          );
         });
-      },
+      }, 1000 / 30),
       {
         signal: abortSignal,
       },

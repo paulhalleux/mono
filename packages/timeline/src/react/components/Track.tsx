@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { useMemo } from "react";
 import { clsx } from "clsx";
 
 import { TrackInstance } from "../../core/types.ts";
@@ -11,7 +11,7 @@ export type TrackProps = React.PropsWithChildren<{
   React.ComponentPropsWithoutRef<"div">;
 
 export const TrackProvider = React.createContext<string>("");
-export const Track = memo(function Track({
+export const Track = React.memo(function Track({
   children,
   track,
   style,

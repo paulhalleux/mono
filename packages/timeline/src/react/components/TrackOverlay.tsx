@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { useMemo } from "react";
 import { clsx } from "clsx";
 
 import { TimelineApi, TimelineState } from "../../core/types.ts";
@@ -13,7 +13,7 @@ const trackHeaderWidthSelector = (_: TimelineState, api: TimelineApi) =>
 const viewportWidthSelector = (state: TimelineState) =>
   state.viewportState.viewportWidth;
 
-export const TrackOverlay = memo(function Track({
+export const TrackOverlay = React.memo(function TrackOverlay({
   children,
   style,
   className,

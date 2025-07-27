@@ -1,12 +1,7 @@
 import React, { useCallback } from "react";
 import { clsx } from "clsx";
 
-import {
-  ItemDef,
-  ItemInstance,
-  TrackDef,
-  TrackInstance,
-} from "./core/types.ts";
+import { ItemDef, TrackDef } from "./core/types.ts";
 import { Waveform } from "./modules/waveform/waveform.ts";
 import { Waveform as WaveformComponent } from "./modules/waveform/waveform.tsx";
 import {
@@ -17,6 +12,7 @@ import {
 } from "./react/adapter.ts";
 import { ResizeHandle } from "./react/components/ResizeHandle.tsx";
 import { Timeline } from "./react/components/Timeline.tsx";
+import { RenderItem } from "./react/components/TrackItems.tsx";
 import { ZoneSelection } from "./react/components/ZoneSelection.tsx";
 
 const rulerHeight = 32;
@@ -50,8 +46,8 @@ export function Docs() {
     maxVisibleDuration: 1000 * 60 * 10,
   });
 
-  const renderTrackItem = useCallback(
-    (item: ItemInstance, track: TrackInstance) => (
+  const renderTrackItem = useCallback<RenderItem>(
+    (item, track) => (
       <Timeline.Item
         item={item}
         className={clsx("docs-timeline-item", {
@@ -118,7 +114,8 @@ export function Docs() {
                     {track.id}
                   </Timeline.TrackHeader>
                   <Timeline.TrackView>
-                    <Timeline.MovedItem className="docs-timeline-item moved" />
+                    <Timeline.MovedItem className="docs-timeline-item" />
+                    <Timeline.ResizedItem className="docs-timeline-item" />
                     <Timeline.TrackItems>{renderTrackItem}</Timeline.TrackItems>
                   </Timeline.TrackView>
                 </Timeline.Track>
@@ -140,11 +137,11 @@ const Controls = ({
   const timeline = useTimelineApi();
   const timePosition = useTimelineStore((_, api) => api.getTimePosition());
   const viewport = useTimelineStore((st) => st.viewportState);
-  const selectedItems = useTimelineStore((st) => st.selectedItems);
+  const itemDragState = useTimelineStore((st) => st.itemDragState);
 
   return (
     <>
-      <pre>{JSON.stringify(Array.from(selectedItems.values()), null, 2)}</pre>
+      <pre>{JSON.stringify(itemDragState, null, 2)}</pre>
       <input
         type="range"
         min="0"

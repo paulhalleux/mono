@@ -5,8 +5,13 @@ import { useTimelineStore } from "../adapter.ts";
 
 import { TrackProvider } from "./Track.tsx";
 
+export type RenderItem = (
+  item: ItemInstance,
+  track: TrackInstance,
+) => React.ReactNode;
+
 export type TrackItemsProps = {
-  children: (item: ItemInstance, track: TrackInstance) => React.ReactNode;
+  children: RenderItem;
 };
 
 export const TrackItems = memo(function TrackItems({
@@ -24,7 +29,7 @@ export const TrackItems = memo(function TrackItems({
   ));
 });
 
-const ItemConsumer = memo(function ItemConsumer({
+const ItemConsumer = React.memo(function ItemConsumer({
   itemId,
   children,
 }: TrackItemsProps & { itemId: string }) {
