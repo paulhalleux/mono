@@ -1,0 +1,21 @@
+{
+  "name": "@paulhalleux/store",
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "scripts": {
+    "build": "tsdown"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@paulhalleux/eslint-config": "^1.0.2",
+    "tsdown": "^0.13.3"
+  }
+}
