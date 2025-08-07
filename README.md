@@ -5,6 +5,8 @@ The package provides the following configurations:
 - `@paulhalleux/ts-config`: TypeScript configuration for projects.
 - `@paulhalleux/vite-config`: Vite configuration for projects.
 
-The following packages are also provided:
+The following packages are also present:
 - `@paulhalleux/json-schema-to-zod`: A tool to convert JSON Schema to Zod schemas.
 - `@paulhalleux/timeline`: A framework-agnostic timeline. (with only react adapter for now)
+- `@paulhalleux/utils`: A collection of utility functions.
+- `@paulhalleux/store`: A store library for managing state in applications.

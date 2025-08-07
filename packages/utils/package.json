@@ -1,5 +1,5 @@
 {
-  "name": "@paulhalleux/store",
+  "name": "@paulhalleux/utils",
   "version": "0.0.0",
   "type": "module",
   "files": [
@@ -11,14 +11,11 @@
     "require": "./dist/index.cjs"
   },
   "scripts": {
-    "build": "tsdown"
+    "build": "tsdown --dts"
   },
-  "dependencies": {
-    "immer": "^10.1.1"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@paulhalleux/eslint-config": "^1.0.2",
-    "@paulhalleux/utils": "^0.0.0",
     "tsdown": "^0.13.3",
     "typescript": "^5.9.2"
   }

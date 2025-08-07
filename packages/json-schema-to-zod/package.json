@@ -11,7 +11,7 @@
     "require": "./dist/index.cjs"
   },
   "scripts": {
-    "build": "tsdown"
+    "build": "tsdown --dts"
   },
   "dependencies": {
     "lodash": "^4.17.21",
@@ -20,6 +20,7 @@
   "devDependencies": {
     "@paulhalleux/eslint-config": "^1.0.2",
     "@types/lodash": "^4.17.20",
-    "tsdown": "^0.13.3"
+    "tsdown": "^0.13.3",
+    "typescript": "^5.9.2"
   }
 }
