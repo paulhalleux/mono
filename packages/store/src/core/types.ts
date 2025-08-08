@@ -34,3 +34,7 @@ export type Middleware<TState extends StateValue> = (
   updater: Updater<TState>,
   next: (newUpdater: Updater<TState>) => void,
 ) => void;
+
+export type MiddlewareFactory<TState extends StateValue> = (
+  store: Store<TState>,
+) => Middleware<TState>;

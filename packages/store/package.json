@@ -20,6 +20,7 @@
     "@paulhalleux/eslint-config": "^1.0.2",
     "@paulhalleux/utils": "^0.0.0",
     "tsdown": "^0.13.3",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   }
 }

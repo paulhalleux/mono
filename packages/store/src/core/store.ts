@@ -5,6 +5,7 @@ import type {
   ActionMetadata,
   ListenerEntry,
   Middleware,
+  MiddlewareFactory,
   Selector,
   StateValue,
   StoreListener,
@@ -12,6 +13,7 @@ import type {
   Unsubscribe,
   Updater,
 } from "./types";
+import { attachMetadata } from "./utils.ts";
 
 export type StoreOptions<TState extends StateValue> = {
   /**
@@ -41,10 +43,7 @@ export class Store<TState extends StateValue> {
 
   constructor(initialState: TState, options?: StoreOptions<TState>) {
     this.initialState = initialState;
-    this.state = Object.assign({}, initialState, {
-      __internal: {},
-    });
-
+    this.state = Object.assign({}, initialState);
     this.listeners = new Set();
     this.middlewares = options?.middlewares || [];
     this.options = options || {};
@@ -75,9 +74,16 @@ export class Store<TState extends StateValue> {
     if (typeof updater === "function") {
       this._dispatch(updater);
     } else {
-      this._dispatch((draft) => {
-        Object.assign(draft, updater);
-      });
+      this._dispatch(
+        attachMetadata(
+          (draft) => {
+            Object.assign(draft, updater);
+          },
+          {
+            name: "anonymous",
+          },
+        ),
+      );
     }
   }
 
@@ -151,6 +157,16 @@ export class Store<TState extends StateValue> {
   }
 
   /**
+   * Applies a middleware to the store.
+   * Middleware can intercept state updates and perform additional actions.
+   * This method is typically called during store initialization.
+   * @param middleware The middleware function to apply. Must be a middleware factory.
+   */
+  use(middleware: MiddlewareFactory<TState>): void {
+    this.middlewares.push(middleware(this));
+  }
+
+  /**
    * Applies the update to the state using Immer and notifies listeners.
    * This is an internal method, called by _dispatch.
    * @param updater The Immer updater function for the state.
@@ -208,13 +224,16 @@ export class Store<TState extends StateValue> {
 
           if (!currentIsEqual(newSelectedValue, entry.lastValue)) {
             entry.lastValue = newSelectedValue; // Update last value for next comparison
+            console.log("set lastValue", entry.lastValue);
             entry.callback(currentState, prevState);
+          } else {
+            entry.lastValue = newSelectedValue;
           }
         } else {
           entry.callback(currentState, prevState);
         }
       } catch (error) {
-        console.error("Store: Error notifying listener:", error);
+        console.error("Error in listener callback:", error);
       }
     });
   }

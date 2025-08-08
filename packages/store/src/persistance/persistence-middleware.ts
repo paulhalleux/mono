@@ -1,153 +1,149 @@
-import { Middleware, StateValue } from "../core";
+import { MiddlewareFactory, StateValue, Store, Updater } from "../core";
+import { attachMetadata } from "../core/utils.ts";
 
-import { localStorageStore } from "./storages";
-import type { PersistOptions } from "./types.ts";
+import { LocalStorageStore } from "./storages";
+import { PersistOptions } from "./types";
 
-const defaultSerialize = <TState extends StateValue>(state: TState): string =>
-  JSON.stringify(state);
+const REHYDRATE_ACTION_NAME = "action::rehydrate";
 
-const defaultDeserialize = <TState extends StateValue>(
-  persistedState: string,
-): TState => JSON.parse(persistedState);
-
-const REHYDRATION_ACTION_NAME = "STORE_REHYDRATE_INTERNAL";
-
-/**
- * Creates a persistence middleware for a Store.
- *
- * @param options Configuration options for persistence.
- * @returns A StoreMiddleware function.
- */
-export const createPersistenceMiddleware = <TState extends StateValue>(
-  options: PersistOptions<TState>,
-): Middleware<TState> => {
-  const {
-    key,
-    storage = localStorageStore,
-    serialize = defaultSerialize,
-    deserialize = defaultDeserialize,
-    whitelist,
-    blacklist,
-    getSnapshot,
-    onRehydrate,
-    rehydrateOnlyOnce = true,
-  } = options;
-
-  let hasRehydrated = false;
-
-  const filterState = (state: TState): Partial<TState> => {
-    if (getSnapshot) {
-      return getSnapshot(state);
-    }
-
-    if (whitelist && whitelist.length > 0) {
-      const filtered: Partial<TState> = {};
-      whitelist.forEach((k) => {
-        if (Object.prototype.hasOwnProperty.call(state, k)) {
-          filtered[k] = state[k];
-        }
-      });
-      return filtered;
-    }
-
-    if (blacklist && blacklist.length > 0) {
-      const filtered: Partial<TState> = {};
-      for (const k in state) {
-        if (
-          Object.prototype.hasOwnProperty.call(state, k) &&
-          !blacklist.includes(k as keyof TState)
-        ) {
-          filtered[k] = state[k];
-        }
+const tryPromise = <T>(fn: () => T | Promise<T>): Promise<T> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const result = fn();
+      if (result instanceof Promise) {
+        result.then(resolve).catch(reject);
+      } else {
+        resolve(result);
       }
-      return filtered;
+    } catch (error) {
+      reject(error);
     }
-
-    return state;
-  };
-
-  return (store, updater, next) => {
-    // Phase 1: Pre-update logic (before the state change)
-    if (!hasRehydrated && rehydrateOnlyOnce) {
-      // Attempt to rehydrate immediately if this is the first dispatch and allowed
-      const persisted = storage.getItem(key);
-      // Handle both synchronous and asynchronous getItem
-      Promise.resolve(persisted).then((str) => {
-        if (str) {
-          try {
-            const loadedState = deserialize(str) as TState;
-            const finalState = onRehydrate
-              ? onRehydrate(loadedState, store.getState())
-              : { ...store.getState(), ...loadedState };
-
-            // Use runAction to update state and go through the chain again
-            store.setState(
-              store.createAction(
-                (draft) => {
-                  Object.assign(draft, finalState);
-                  draft.__internal.hasHydrated = true;
-                },
-                {
-                  name: REHYDRATION_ACTION_NAME,
-                },
-              ),
-            );
-          } catch (error) {
-            console.error(
-              "Persistence Middleware: Failed to deserialize or rehydrate state:",
-              error,
-            );
-            storage.removeItem?.(key);
-          }
-        }
-      });
-      hasRehydrated = true;
-    }
-
-    next(updater);
-
-    // Phase 3: Post-update logic (after the state has been updated)
-    // Only save if it's not the initial rehydration action itself
-    // We check `_isRehydration` flag on the metadata or the state's `_hasHydrated` flag.
-    const isInternalRehydrationAction =
-      updater.metadata?.name === REHYDRATION_ACTION_NAME;
-
-    if (!isInternalRehydrationAction) {
-      try {
-        const stateToPersist = filterState(store.getState());
-        storage.setItem(key, serialize(stateToPersist as TState));
-      } catch (error) {
-        console.error(
-          "Persistence Middleware: Failed to persist state:",
-          error,
-        );
-      }
-    }
-  };
+  });
 };
 
-// --- Initial Hydration Logic (outside the middleware for initial load) ---
-export const loadPersistedState = async <TState extends StateValue>(
-  options: PersistOptions<TState>,
-  defaultInitialState: TState,
-): Promise<TState> => {
+/**
+ * Creates a persistence middleware for a Redux-like store.
+ * This middleware automatically saves and loads the store's state from a specified storage.
+ * It also queues updates that happen before rehydration is complete.
+ */
+export const createPersistenceMiddleware = <
+  TState extends StateValue,
+  TPersistedState,
+>(
+  options: PersistOptions<TState, TPersistedState>,
+): MiddlewareFactory<TState> => {
   const {
     key,
-    storage = localStorageStore,
-    deserialize = defaultDeserialize,
+    get,
+    storage = LocalStorageStore.make(),
+    serialize = JSON.stringify,
+    deserialize = JSON.parse,
     onRehydrate,
+    onPersistError,
+    onPersistSuccess,
+    onRehydrateError,
+    onRehydrateSuccess,
   } = options;
-  try {
-    const persisted = await storage.getItem(key);
-    if (persisted) {
-      const loadedState = deserialize(persisted) as TState;
-      return onRehydrate
-        ? onRehydrate(loadedState, defaultInitialState)
-        : { ...defaultInitialState, ...loadedState };
+
+  let rehydrated = false;
+  let isRehydrationInProgress = false;
+  const updateQueue: Updater<TState>[] = [];
+
+  const persistState = (state: TState) => {
+    try {
+      const stateToStore = get(state);
+      const serializedState = serialize(stateToStore);
+      const r = storage.setItem(key, serializedState);
+      if (r instanceof Promise) {
+        r.catch((error) => {
+          onPersistError?.(error as Error);
+        });
+      }
+      onPersistSuccess?.(stateToStore);
+    } catch (error) {
+      onPersistError?.(error as Error);
     }
-  } catch (error) {
-    console.error("Persistence: Failed to load state from storage.", error);
-    storage.removeItem?.(key);
-  }
-  return defaultInitialState;
+  };
+
+  const rehydrateState = (store: Store<TState>) => {
+    if (rehydrated) {
+      return;
+    }
+
+    const _rehydrate = (storedItem: string | null) => {
+      if (storedItem === null) {
+        return;
+      }
+
+      const parsedState = deserialize(storedItem) as TPersistedState;
+      const initialState = store.getInitialState();
+
+      let stateToSet: TState;
+      if (onRehydrate) {
+        stateToSet = onRehydrate(parsedState, initialState);
+      } else {
+        stateToSet = { ...initialState, ...parsedState };
+      }
+
+      store.runTransaction(() => {
+        const updater = attachMetadata(
+          (draft) => {
+            Object.assign(draft, stateToSet);
+          },
+          {
+            name: REHYDRATE_ACTION_NAME,
+          },
+        );
+
+        store.setState(updater);
+      });
+
+      onRehydrateSuccess?.(parsedState, initialState);
+    };
+
+    const _catch = (error: Error) => {
+      onRehydrateError?.(error);
+      if (storage.removeItem) {
+        storage.removeItem(key);
+      }
+    };
+
+    const _finally = () => {
+      rehydrated = true;
+      while (updateQueue.length > 0) {
+        const queuedUpdater = updateQueue.shift();
+        if (queuedUpdater) {
+          store.setState(queuedUpdater);
+        }
+      }
+      isRehydrationInProgress = false;
+    };
+
+    tryPromise(() => storage.getItem(key))
+      .then(_rehydrate)
+      .catch(_catch)
+      .finally(_finally);
+  };
+
+  return (store) => {
+    if (!isRehydrationInProgress) {
+      isRehydrationInProgress = true;
+      rehydrateState(store);
+    }
+
+    return (storeInstance, updater, next) => {
+      if (
+        !rehydrated &&
+        isRehydrationInProgress &&
+        updater.metadata?.name !== REHYDRATE_ACTION_NAME
+      ) {
+        updateQueue.push(updater);
+      } else {
+        next(updater);
+        if (updater.name !== REHYDRATE_ACTION_NAME) {
+          persistState(storeInstance.getState());
+        }
+      }
+    };
+  };
 };

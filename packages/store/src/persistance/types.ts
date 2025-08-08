@@ -1,12 +1,8 @@
 import { StateValue } from "../core";
 
-export type StorageApi = {
-  getItem: (key: string) => string | null | Promise<string | null>;
-  setItem: (key: string, value: string) => void | Promise<void>;
-  removeItem?: (key: string) => void | Promise<void>;
-};
+import { StorageApi } from "./storages/types.ts";
 
-export type PersistOptions<TState extends StateValue> = {
+export type PersistOptions<TState extends StateValue, TPersistedState> = {
   /** The key to use for storing state in the chosen storage. */
   key: string;
   /** The storage API to use (localStorage, sessionStorage, or custom). */
@@ -16,28 +12,45 @@ export type PersistOptions<TState extends StateValue> = {
   /** A function to deserialize the state when loading. Defaults to JSON.parse. */
   deserialize?: (persistedState: string) => TState;
   /**
-   * An array of state keys to explicitly persist. If not provided, the entire state is persisted.
-   * If provided, only these keys will be stored.
-   */
-  whitelist?: Array<keyof TState>;
-  /**
-   * An array of state keys to explicitly omit from persistence.
-   * Takes precedence over `whitelist`.
-   */
-  blacklist?: Array<keyof TState>;
-  /**
    * A function to get a snapshot of the state for persistence.
    * If not provided, the entire state will be persisted and whitelisted/blacklisted keys will be applied.
    */
-  getSnapshot?: (state: TState) => Partial<TState>;
+  get: (state: TState) => TPersistedState;
   /**
    * Called when state is rehydrated from storage.
    * You can use this to merge the rehydrated state with initial state.
    */
-  onRehydrate?: (rehydratedState: TState, initialState: TState) => TState;
+  onRehydrate?: (
+    rehydratedState: TPersistedState,
+    initialState: TState,
+  ) => TState;
   /**
-   * If true, rehydration will only occur once when the store is instantiated.
+   * Called when rehydration fails.
+   * @param error The error that occurred during rehydration.
+   */
+  onRehydrateError?: (error: Error) => void;
+  /**
+   * Called when rehydration is successful.
+   * @param rehydratedState The state that was rehydrated from storage.
+   * @param initialState The initial state of the store before rehydration.
+   */
+  onRehydrateSuccess?: (
+    rehydratedState: TPersistedState,
+    initialState: TState,
+  ) => void;
+  /**
+   * Optional callback for handling errors that occur during persistence.
+   * This can be used to log errors or perform custom error handling.
+   */
+  onPersistError?: (error: Error) => void;
+  /**
+   * Optional callback for handling successful persistence.
+   * This can be used to log success or perform custom actions after persistence.
+   */
+  onPersistSuccess?: (persistedState: TPersistedState) => void;
+  /**
+   * If true, the initial state will be persisted immediately if no data exists in storage.
    * Default: true.
    */
-  rehydrateOnlyOnce?: boolean;
+  persistInitialState?: boolean;
 };

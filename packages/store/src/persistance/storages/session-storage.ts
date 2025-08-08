@@ -1,36 +1,30 @@
-import { StorageApi } from "../types.ts";
+import { createSyncStorageApi } from "./utils.ts";
 
-/**
- * Default StorageAPI implementation using `sessionStorage`.
- * It gracefully handles environments where `sessionStorage` might not be available (e.g., SSR).
- */
-export const sessionStorageStore: StorageApi = {
-  getItem: (key: string): string | null => {
-    try {
-      if (typeof window !== "undefined" && window.sessionStorage) {
-        return window.sessionStorage.getItem(key);
-      }
-    } catch (error) {
-      console.error("sessionStorage.getItem failed:", error);
-    }
-    return null;
-  },
-  setItem: (key: string, value: string): void => {
-    try {
-      if (typeof window !== "undefined" && window.sessionStorage) {
-        window.sessionStorage.setItem(key, value);
-      }
-    } catch (error) {
-      console.error("sessionStorage.setItem failed:", error);
-    }
-  },
-  removeItem: (key: string): void => {
-    try {
-      if (typeof window !== "undefined" && window.sessionStorage) {
-        window.sessionStorage.removeItem(key);
-      }
-    } catch (error) {
-      console.error("sessionStorage.removeItem failed:", error);
-    }
+export const SessionStorageStore = {
+  make() {
+    return createSyncStorageApi({
+      getItem: (key: string): string | null => {
+        if (typeof window !== "undefined" && window.sessionStorage) {
+          return window.sessionStorage.getItem(key);
+        }
+        return null;
+      },
+      setItem: (key: string, value: string): void => {
+        if (typeof window !== "undefined" && window.sessionStorage) {
+          window.sessionStorage.setItem(key, value);
+        }
+      },
+      removeItem: (key: string): void => {
+        if (typeof window !== "undefined" && window.sessionStorage) {
+          window.sessionStorage.removeItem(key);
+        }
+      },
+      hasItem: (key: string): boolean => {
+        if (typeof window !== "undefined" && window.sessionStorage) {
+          return window.sessionStorage.getItem(key) !== null;
+        }
+        return false;
+      },
+    });
   },
 };
