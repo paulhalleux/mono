@@ -1,3 +1,3 @@
-# json-schema-to-zod
+# utils
 
-A tool to convert JSON Schema to Zod schemas. (Inspired by [zod-from-json-schema](https://github.com/glideapps/zod-from-json-schema))
+Some utility functions.

@@ -1,3 +1,11 @@
-# json-schema-to-zod
+# store
 
-A tool to convert JSON Schema to Zod schemas. (Inspired by [zod-from-json-schema](https://github.com/glideapps/zod-from-json-schema))
+A store package for managing application state.
+
+## Features
+- Centralized state management
+- Reactive updates
+- Middleware support
+- Scoped subscriptions
+- Built-in persistence middleware
+- Built-in persistence storages
