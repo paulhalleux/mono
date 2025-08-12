@@ -15,10 +15,14 @@
   ],
   "exports": {
     "./vite.lib.config.js": {
-      "import": "./vite.lib.config.js"
+      "import": "./vite.lib.config.js",
+      "default": "./vite.lib.config.js",
+      "types": "./vite.config.d.ts"
     },
     "./vite.app.config.js": {
-      "import": "./vite.app.config.js"
+      "import": "./vite.app.config.js",
+      "default": "./vite.app.config.js",
+      "types": "./vite.config.d.ts"
     }
   },
   "dependencies": {
