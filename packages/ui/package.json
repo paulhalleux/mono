@@ -1,0 +1,38 @@
+{
+  "name": "@paulhalleux/ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^4.1.0",
+    "@paulhalleux/eslint-config": "^1.0.3",
+    "@paulhalleux/ts-config": "^1.0.3",
+    "@paulhalleux/vite-config": "^1.0.3",
+    "@storybook/addon-a11y": "^9.1.2",
+    "@storybook/addon-docs": "^9.1.2",
+    "@storybook/addon-onboarding": "^9.1.2",
+    "@storybook/addon-vitest": "^9.1.2",
+    "@storybook/react-vite": "^9.1.2",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "eslint-plugin-storybook": "^9.1.2",
+    "storybook": "^9.1.2",
+    "typescript": "^5.9.2",
+    "vite": "^6.3.1",
+    "vitest": "^3.2.4",
+    "@vitest/browser": "^3.2.4",
+    "playwright": "^1.54.2",
+    "@vitest/coverage-v8": "^3.2.4"
+  }
+}

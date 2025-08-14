@@ -219,7 +219,7 @@ export type EditorSettingsModule<
  * It defines everything that a settings module should have and
  * how it should behave.
  */
-export type SettingsModule<
+export type SettingsModuleType<
   EntityList,
   EntityIn = EntityList,
   EntityOut = EntityIn,
@@ -249,7 +249,7 @@ export interface ComponentEditorProps<
   EntityIn = EntityList,
   EntityOut = EntityIn,
 > {
-  module: SettingsModule<EntityList, EntityIn, EntityOut>;
+  module: SettingsModuleType<EntityList, EntityIn, EntityOut>;
   entity?: EntityIn;
   kind: ActionKind;
   onSave: (entity: EntityOut) => void;

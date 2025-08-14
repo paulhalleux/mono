@@ -1,6 +1,6 @@
 import { EditorSettingsModule, ListSettingsModule } from "./types.ts";
 
-export const Module = {
+export const SettingsModule = {
   makeList<EntityList, EntityIn = EntityList, EntityOut = EntityIn>(
     module: Omit<ListSettingsModule<EntityList, EntityIn, EntityOut>, "kind">,
   ): ListSettingsModule<EntityList, EntityIn, EntityOut> {
